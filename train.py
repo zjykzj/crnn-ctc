@@ -7,10 +7,7 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python train_wr2.py ../datasets/CCPD2019/ccpd_base ../datasets/CCPD2019/ccpd_weather runs/train_wr2
-
-Usage - Multi-GPU DDP training:
-    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_wr2.py --device 0,1,2,3 ../datasets/CCPD2019/ccpd_base ../datasets/CCPD2019/ccpd_weather runs/train_wr2_ddp
+    $ python train.py ../crnn-ctc-loss-pytorch/EMNIST/ runs/
 
 """
 
