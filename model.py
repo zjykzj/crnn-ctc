@@ -63,8 +63,8 @@ class CRNN(nn.Module):
 
 
 if __name__ == '__main__':
-    model = CRNN()
+    model = CRNN(in_channel=1, num_classes=11, cnn_output_height=4)
 
-    data = torch.randn(10, 1, 28, 28)
+    data = torch.randn(10, 1, 28, 140)
     output = model(data)
     print(data.shape, output.shape)
