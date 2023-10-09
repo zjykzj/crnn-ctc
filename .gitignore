@@ -601,3 +601,4 @@ cython_debug/
 #.idea/
 
 /runs/
+/tests/EMNIST/
