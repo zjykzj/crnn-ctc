@@ -25,7 +25,7 @@ class EMNISTDataset(Dataset):
         self.transform = transforms.Compose([
             transforms.ToPILImage(),
             transforms.RandomRotation(45, fill=0),
-            transforms.RandomHorizontalFlip(),
+            # transforms.RandomHorizontalFlip(),
             transforms.RandomAffine(degrees=10, translate=(0.2, 0.15), scale=(0.8, 1.1)),
             transforms.ToTensor()
         ])
@@ -42,7 +42,7 @@ class EMNISTDataset(Dataset):
         transformed_images = []
         for image in emnist_images:
             image = self.transform(image)
-            transformed_images.append(image / 255.)
+            transformed_images.append(image)
 
         # [N, 1, 28, 28] -> [N, 28, 28]
         transformed_images = torch.stack(transformed_images).reshape(self.digits_per_sequence, 28, 28)
