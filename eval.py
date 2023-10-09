@@ -4,7 +4,11 @@
 @date: 2023/10/9 下午4:42
 @file: eval.py
 @author: zj
-@description: 
+@description:
+
+Usage - Single-GPU eval:
+    $ python eval.py runs/CRNN-e100.pth ../datasets/EMNIST/
+
 """
 
 import argparse
@@ -42,7 +46,9 @@ def val(val_root, pretrained):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
-    val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=2000, digits_per_sequence=5)
+    digits_per_sequence = 5
+    val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=2000,
+                                digits_per_sequence=digits_per_sequence)
     val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4, drop_last=False,
                                 pin_memory=True)
 
