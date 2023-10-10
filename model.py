@@ -52,12 +52,13 @@ class CRNN(nn.Module):
         x, _ = self.rnn(x)
 
         # [N, W, gru_hidden_size*2] -> [N, W, num_classes]
-        out = []
-        for item in x:
-            tmp = self.fc(item)
-            log = F.log_softmax(tmp, dim=-1)
-            out.append(log)
-        out = torch.stack(out)
+        # out = []
+        # for item in x:
+        #     tmp = self.fc(item)
+        #     log = F.log_softmax(tmp, dim=-1)
+        #     out.append(log)
+        # out = torch.stack(out)
+        out = F.log_softmax(self.fc(x), dim=-1)
 
         return out
 
