@@ -30,7 +30,7 @@ class EMNISTDataset(Dataset):
             transforms.ToTensor()
         ])
 
-    def __getitem__(self, index):
+    def __getitem__(self, index, return_tf=False):
         assert index < self.num_of_sequences
 
         indices = np.random.choice(len(self.emnist), size=(self.digits_per_sequence,))
@@ -41,7 +41,7 @@ class EMNISTDataset(Dataset):
 
         transformed_images = []
         for image in emnist_images:
-            image = self.transform(image)
+            image = self.transform(image.T)
             transformed_images.append(image)
 
         # [N, 1, 28, 28] -> [N, 28, 28]
@@ -51,8 +51,11 @@ class EMNISTDataset(Dataset):
         # [H, N*W] -> [1, H, N*W]
         sequence = torch.from_numpy(sequence).reshape((1, 28, self.digits_per_sequence * 28))
 
-        # [1, H, N*W], [N]
-        return sequence, emnist_labels
+        if return_tf:
+            return sequence, emnist_labels, transformed_images
+        else:
+            # [1, H, N*W], [N]
+            return sequence, emnist_labels
 
     def __len__(self):
         return self.num_of_sequences
