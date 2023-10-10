@@ -1,0 +1,11 @@
+# crnn-ctc requirements
+# Usage: pip install -r requirements.txt
+
+# Base ------------------------------------------------------------------------
+numpy>=1.18.5
+opencv-python>=4.1.1
+Pillow>=7.1.2
+scipy>=1.4.1
+torch>=1.7.0  # see https://pytorch.org/get-started/locally (recommended)
+torchvision>=0.8.1
+tqdm>=4.64.0
