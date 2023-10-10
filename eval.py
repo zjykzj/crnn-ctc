@@ -7,7 +7,7 @@
 @description:
 
 Usage - Single-GPU eval:
-    $ python eval.py runs/CRNN-e100.pth ../datasets/EMNIST/
+    $ python eval.py runs/emnist/CRNN-e100.pth ../datasets/EMNIST/
 
 """
 
