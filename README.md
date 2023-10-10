@@ -32,7 +32,7 @@
 
 ## Latest News
 
-...
+* ***[2023/10/10][v0.1.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.1.0). Support training/evaluation/prediction of CRNN+CTC based on EMNIST digital characters.***
 
 ## Background
 
