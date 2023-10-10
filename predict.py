@@ -53,7 +53,7 @@ def predict(val_root, pretrained, save_dir):
     val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=2000,
                                 digits_per_sequence=digits_per_sequence)
 
-    plt.figure()
+    plt.figure(figsize=(10, 6))
 
     blank_label = 10
     for i in range(1, 7):
@@ -68,15 +68,16 @@ def predict(val_root, pretrained, save_dir):
         _, max_index = torch.max(output, dim=1)
         raw_pred = list(max_index.numpy())
         pred = torch.IntTensor([c for c, _ in groupby(raw_pred) if c != blank_label])
-        print(pred, emnist_labels)
+        pred = pred.numpy()
+        emnist_labels = emnist_labels.numpy()
+        # print(pred, emnist_labels)
 
         np_images = (transformed_images * 255).numpy()
         np_images = np.hstack(np_images)
-        # cv2.imwrite(f"runs/img{i}.jpg", np_images)
 
         plt.subplot(3, 2, i)
-        title = f"Actual: {str(emnist_labels.numpy())}\nPredicted: {str(pred.numpy())}"
-        # print(f"{title}")
+        title = f"Label: {str(emnist_labels)} Pred: {str(pred)}"
+        print(title)
         plt.title(title)
         plt.imshow(np_images, cmap='gray')
         plt.axis('off')
