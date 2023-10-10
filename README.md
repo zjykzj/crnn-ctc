@@ -24,6 +24,7 @@
 - [Usage](#usage)
   - [Train](#train)
   - [Eval](#eval)
+  - [Predict](#predict)
 - [Maintainers](#maintainers)
 - [Thanks](#thanks)
 - [Contributing](#contributing)
@@ -39,25 +40,43 @@ This warehouse aims to better understand and apply CRNN+CTC, and currently achie
 
 ## Installation
 
-...
+```shell
+pip install -r requirements.txt
+```
 
 ## Usage
 
 ### Train
 
 ```shell
-python train.py ../crnn-ctc-loss-pytorch/EMNIST/ runs/
+python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist/
 ```
 
 ### Eval
 
 ```shell
-$ python eval.py runs/CRNN-e100.pth ../crnn-ctc-loss-pytorch/EMNIST/
-args: Namespace(pretrained='runs/CRNN-e100.pth', val_root='../crnn-ctc-loss-pytorch/EMNIST/')
-Loading CRNN pretrained: runs/CRNN-e100.pth
-Batch:62 ACC:93.750: 100%|███████████████████████████████████████████████| 63/63 [00:02<00:00, 27.43it/s]
-ACC:94.200
+$ python eval.py runs/emnist/CRNN-e100.pth ../datasets/EMNIST/
+args: Namespace(pretrained='runs/emnist/CRNN-e100.pth', val_root='../datasets/EMNIST/')
+Loading CRNN pretrained: runs/emnist/CRNN-e100.pth
+Batch:62 ACC:93.750: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:02<00:00, 31.24it/s]
+ACC:94.550
 ```
+
+### Predict
+
+```shell
+$ python predict.py runs/emnist/CRNN-e100.pth ../datasets/EMNIST/ runs/
+args: Namespace(pretrained='runs/emnist/CRNN-e100.pth', save_dir='runs/', val_root='../datasets/EMNIST/')
+Loading CRNN pretrained: runs/emnist/CRNN-e100.pth
+Label: [8 5 6 3 0] Pred: [8 5 6 3 0]
+Label: [9 5 9 5 6] Pred: [9 5 9 5 6]
+Label: [1 6 0 2 7] Pred: [1 6 0 2 7]
+Label: [9 3 2 3 3] Pred: [9 3 2 3 3]
+Label: [5 3 5 3 5] Pred: [5 3 6 3 5]
+Label: [4 4 9 6 4] Pred: [4 4 9 6 4]
+```
+
+![](assets/predict.jpg)
 
 ## Maintainers
 
