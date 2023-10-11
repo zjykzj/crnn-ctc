@@ -14,6 +14,8 @@ from pathlib import Path
 import torch
 from torch.utils.data import Dataset
 
+RANK = int(os.getenv('RANK', -1))
+
 PLATE_CHARS = "#京沪津渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新学警港澳挂使领民航危0123456789ABCDEFGHJKLMNPQRSTUVWXYZ险品"
 
 
@@ -74,7 +76,8 @@ class PlateDataset(Dataset):
 
         img_list = load_data(data_root, pattern="*.jpg")
         data_list, label_dict = create_plate_label(img_list)
-        print(f"Load {'train' if is_train else 'test'} data: {len(data_list)}")
+        if RANK in {-1, 0}:
+            print(f"Load {'train' if is_train else 'test'} data: {len(data_list)}")
 
         self.data_list = data_list
         self.dataset_len = len(data_list)
