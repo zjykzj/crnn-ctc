@@ -112,6 +112,7 @@ Pred: 川A3X7J1
 ## Thanks
 
 * [rinabuoy/crnn-ctc-loss-pytorch](https://github.com/rinabuoy/crnn-ctc-loss-pytorch.git)
+* [we0091234/crnn_plate_recognition](https://github.com/we0091234/crnn_plate_recognition.git)
 * [zjykzj/LPDet](https://github.com/zjykzj/LPDet)
 
 ## Contributing
