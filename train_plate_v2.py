@@ -7,10 +7,10 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python train.py ../crnn-ctc-loss-pytorch/EMNIST/ runs/
+    $ python train_plate_v2.py ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate/
 
 Usage - Multi-GPU DDP training:
-    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist/
+    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_plate_v2.py  --device 0,1,2,3  ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate_ddp/
 
 """
 
@@ -46,7 +46,7 @@ def parse_opt():
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to plate val dataset')
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
-    parser.add_argument('--batch-size', type=int, default=256, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--batch-size', type=int, default=32, help='total batch size for all GPUs, -1 for autobatch')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -81,7 +81,7 @@ def train(opt, device):
     # criterion = torch.nn.CTCLoss()
 
     learn_rate = 0.001 * WORLD_SIZE
-    weight_decay = 0.
+    weight_decay = 1e-5
     LOGGER.info(f"Final learning rate: {learn_rate}, weight decay: {weight_decay}")
     optimizer = optim.Adam(model.parameters(), lr=learn_rate, weight_decay=weight_decay)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 70, 90])
@@ -156,7 +156,7 @@ def train(opt, device):
                 info = f"Epoch:{epoch} Batch:{idx} LR:{lr:.6f} Loss:{loss:.6f}"
                 pbar.set_description(info)
 
-        if RANK in {-1, 0} and epoch % 1 == 0 and epoch > 0:
+        if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
             save_path = os.path.join(output, f"crnn-plate-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
