@@ -25,15 +25,14 @@ import torch.optim as optim
 import torch.distributed as dist
 from torch.utils.data import DataLoader, distributed
 
-from model import CRNN
-from loss import CTCLoss
-from dataset import EMNISTDataset
-from evaluator import EMNISTEvaluator
-
+from utils.model.crnn_gru import CRNN
+from utils.loss import CTCLoss
+from utils.evaluator import Evaluator
 from utils.torchutil import select_device
 from utils.ddputil import smart_DDP
 from utils.logger import LOGGER
 from utils.general import init_seeds
+from utils.dataset.emnist import EMNISTDataset
 
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
@@ -41,7 +40,7 @@ WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 
 def parse_opt():
-    parser = argparse.ArgumentParser(description='Training wR2')
+    parser = argparse.ArgumentParser(description='Training')
     parser.add_argument('data_root', metavar='DIR', type=str, help='path to EMNIST dataset')
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
@@ -65,7 +64,8 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
         param_group['lr'] = lr
 
 
-def train(data_root, batch_size, output, device):
+def train(opt, device):
+    data_root, batch_size, output = opt.data_root, opt.batch_size, opt.output
     if RANK in {-1, 0} and not os.path.exists(output):
         os.makedirs(output)
 
@@ -96,7 +96,7 @@ def train(data_root, batch_size, output, device):
                                     pin_memory=True)
 
         LOGGER.info("=> Load evaluator")
-        emnist_evaluator = EMNISTEvaluator(blank_label=blank_label)
+        emnist_evaluator = Evaluator(blank_label=blank_label)
 
     LOGGER.info("=> Start training")
     t0 = time.time()
@@ -144,7 +144,7 @@ def train(data_root, batch_size, output, device):
 
         if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
-            save_path = os.path.join(output, f"CRNN-e{epoch}.pth")
+            save_path = os.path.join(output, f"crnn-emnist-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 
@@ -179,7 +179,7 @@ def main(opt):
 
     init_seeds(opt.seed + 1 + RANK, deterministic=False)
     # LOGGER.info(f"LOCAL_RANK: {LOCAL_RANK} RANK: {RANK} WORLD_SIZE: {WORLD_SIZE}")
-    train(opt.data_root, opt.batch_size, opt.output, device)
+    train(opt, device)
 
 
 if __name__ == '__main__':

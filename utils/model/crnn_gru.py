@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-@date: 2023/10/9 下午2:43
-@file: model.py
+@date: 2023/10/11 上午11:22
+@file: crnn_gru.py
 @author: zj
 @description: 
 """
+
 
 import torch
 import torch.nn as nn
@@ -64,8 +65,20 @@ class CRNN(nn.Module):
 
 
 if __name__ == '__main__':
+    # EMNIST
     model = CRNN(in_channel=1, num_classes=11, cnn_output_height=4)
 
-    data = torch.randn(10, 1, 28, 140)
+    data = torch.randn(10, 1, 28, 28 * 5)
+    output = model(data)
+    print(data.shape, output.shape)
+
+    # Plate
+    model = CRNN(in_channel=3, num_classes=29, cnn_output_height=9)
+
+    data = torch.randn(10, 3, 48, 168)
+    output = model(data)
+    print(data.shape, output.shape)
+
+    data = torch.randn(10, 3, 48, 300)
     output = model(data)
     print(data.shape, output.shape)

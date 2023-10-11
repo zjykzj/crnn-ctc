@@ -18,9 +18,9 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from model import CRNN
-from dataset import EMNISTDataset
-from evaluator import EMNISTEvaluator
+from utils.model.crnn_gru import CRNN
+from utils.dataset.emnist import EMNISTDataset
+from utils.evaluator import Evaluator
 
 
 def parse_opt():
@@ -53,7 +53,7 @@ def val(val_root, pretrained):
                                 pin_memory=True)
 
     blank_label = 10
-    emnist_evaluator = EMNISTEvaluator(blank_label=blank_label)
+    emnist_evaluator = Evaluator(blank_label=blank_label)
 
     pbar = tqdm(val_dataloader)
     for idx, (images, targets) in enumerate(pbar):

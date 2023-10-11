@@ -13,19 +13,18 @@ import torch.nn as nn
 
 class CTCLoss(nn.Module):
 
-    def __init__(self, blank_label=10, cnn_output_width=32):
+    def __init__(self, blank_label=0):
         super().__init__()
-        self.cnn_output_width = cnn_output_width
-
         self.loss = torch.nn.CTCLoss(blank=blank_label, reduction='mean', zero_infinity=True)
 
-    def forward(self, preds, targets):
-        N = preds.shape[0]
+    def forward(self, preds, targets, target_lengths=None):
+        N, cnn_output_width = preds.shape[:2]
         # [N, W, num_classes] -> [W, N, num_classes]
         preds = preds.permute(1, 0, 2)
 
-        input_lengths = torch.IntTensor(N).fill_(self.cnn_output_width)
-        target_lengths = torch.IntTensor([len(t) for t in targets])
+        input_lengths = torch.IntTensor(N).fill_(cnn_output_width)
+        if target_lengths is None:
+            target_lengths = torch.IntTensor([len(t) for t in targets])
 
         loss = self.loss(preds, targets, input_lengths, target_lengths)
         return loss

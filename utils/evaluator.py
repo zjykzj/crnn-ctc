@@ -12,7 +12,7 @@ import torch
 from itertools import groupby
 
 
-class EMNISTEvaluator:
+class Evaluator:
 
     def __init__(self, blank_label=10):
         self.blank_label = blank_label

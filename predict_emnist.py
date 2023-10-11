@@ -21,8 +21,8 @@ import matplotlib.pyplot as plt
 
 import torch
 
-from model import CRNN
-from dataset import EMNISTDataset
+from utils.model.crnn_gru import CRNN
+from utils.dataset.emnist import EMNISTDataset
 
 
 def parse_opt():
