@@ -18,8 +18,8 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from utils.model import CRNN
-from utils.dataset.plate import PlateDataset
+from utils.model.crnn_lstm import CRNN
+from utils.dataset.plate import PlateDataset, PLATE_CHARS
 from utils.evaluator import Evaluator
 
 
@@ -36,7 +36,7 @@ def parse_opt():
 
 @torch.no_grad()
 def val(val_root, pretrained):
-    model = CRNN(in_channel=3, num_classes=29, cnn_output_height=9)
+    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=9)
     print(f"Loading CRNN pretrained: {pretrained}")
     ckpt = torch.load(pretrained, map_location='cpu')
     ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}

@@ -25,8 +25,9 @@ import torch.optim as optim
 import torch.distributed as dist
 from torch.utils.data import DataLoader, distributed
 
+from utils.model.crnn_lstm import CRNN
 # from utils.model.crnn_gru import CRNN
-from utils.model.crnn_conv import CRNN
+# from utils.model.crnn_conv import CRNN
 from utils.loss import CTCLoss
 from utils.evaluator import Evaluator
 from utils.torchutil import select_device
@@ -72,9 +73,9 @@ def train(opt, device):
         os.makedirs(output)
 
     LOGGER.info("=> Create Model")
-    # model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=9).to(device)
-    cfg = [16, 16, 32, 32, 'M', 64, 64, 'M', 96, 96, 'M', 128, 256]
-    model = CRNN(num_classes=len(PLATE_CHARS), cfg=cfg).to(device)
+    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=9).to(device)
+    # cfg = [16, 16, 32, 32, 'M', 64, 64, 'M', 96, 96, 'M', 128, 256]
+    # model = CRNN(num_classes=len(PLATE_CHARS), cfg=cfg).to(device)
     blank_label = 0
     criterion = CTCLoss(blank_label=blank_label).to(device)
 
