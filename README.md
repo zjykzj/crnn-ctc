@@ -49,34 +49,60 @@ pip install -r requirements.txt
 ### Train
 
 ```shell
-python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist/
+$ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_emist.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist_ddp/
+```
+
+```shell
+$ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_plate.py --device 0,1,2,3 ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate_ddp/
 ```
 
 ### Eval
 
 ```shell
-$ python eval.py runs/emnist/CRNN-e100.pth ../datasets/EMNIST/
-args: Namespace(pretrained='runs/emnist/CRNN-e100.pth', val_root='../datasets/EMNIST/')
-Loading CRNN pretrained: runs/emnist/CRNN-e100.pth
-Batch:62 ACC:93.750: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:02<00:00, 31.24it/s]
-ACC:94.550
+$ python eval_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/EMNIST/
+args: Namespace(pretrained='runs/emnist_ddp/crnn-emnist-e100.pth', val_root='../datasets/EMNIST/')
+Loading CRNN pretrained: runs/emnist_ddp/crnn-emnist-e100.pth
+Batch:62 ACC:100.000: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:02<00:00, 30.82it/s]
+ACC:95.100
+```
+
+```shell
+$ python eval_plate.py runs/plate_ddp/crnn-plate-e100.pth ../datasets/git_plate/val_verify/
+args: Namespace(pretrained='runs/plate_ddp/crnn-plate-e100.pth', val_root='../datasets/git_plate/val_verify/')
+Loading CRNN pretrained: runs/plate_ddp/crnn-plate-e100.pth
+Load test data: 2014
+Batch:62 ACC:96.667: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:02<00:00, 22.51it/s]
+ACC:97.319
 ```
 
 ### Predict
 
 ```shell
-$ python predict.py runs/emnist/CRNN-e100.pth ../datasets/EMNIST/ runs/
-args: Namespace(pretrained='runs/emnist/CRNN-e100.pth', save_dir='runs/', val_root='../datasets/EMNIST/')
-Loading CRNN pretrained: runs/emnist/CRNN-e100.pth
-Label: [8 5 6 3 0] Pred: [8 5 6 3 0]
-Label: [9 5 9 5 6] Pred: [9 5 9 5 6]
-Label: [1 6 0 2 7] Pred: [1 6 0 2 7]
-Label: [9 3 2 3 3] Pred: [9 3 2 3 3]
-Label: [5 3 5 3 5] Pred: [5 3 6 3 5]
-Label: [4 4 9 6 4] Pred: [4 4 9 6 4]
+$ python predict_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/EMNIST/ runs/
+args: Namespace(pretrained='runs/emnist_ddp/crnn-emnist-e100.pth', save_dir='runs/', val_root='../datasets/EMNIST/')
+Loading CRNN pretrained: runs/emnist_ddp/crnn-emnist-e100.pth
+Label: [6 5 3 8 6] Pred: [6 5 3 8 6]
+Label: [2 1 4 3 0] Pred: [2 1 4 3 0]
+Label: [8 5 3 3 5] Pred: [8 5 3 3 5]
+Label: [0 7 9 4 9] Pred: [0 7 9 4 9]
+Label: [6 1 7 2 0] Pred: [6 1 7 2 0]
+Label: [8 8 9 9 5] Pred: [8 8 9 9 5]
 ```
 
 ![](assets/predict.jpg)
+
+```shell
+$ python predict_plate.py runs/plate_ddp/crnn-plate-e100.pth ./assets/plate/宁A87J92_0.jpg runs/
+args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', pretrained='runs/plate_ddp/crnn-plate-e100.pth', save_dir='runs/')
+Loading CRNN pretrained: runs/plate_ddp/crnn-plate-e100.pth
+Pred: 宁A87J92
+$ python predict_plate.py runs/plate_ddp/crnn-plate-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/
+args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', pretrained='runs/plate_ddp/crnn-plate-e100.pth', save_dir='runs/')
+Loading CRNN pretrained: runs/plate_ddp/crnn-plate-e100.pth
+Pred: 川A3X7J1
+```
+
+<p align="left"><img src="assets/plate_宁A87J92_0.jpg" height="240"\>  <img src="assets/plate_川A3X7J1_0.jpg" height="240"\></p>
 
 ## Maintainers
 
