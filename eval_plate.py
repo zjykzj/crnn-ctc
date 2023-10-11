@@ -7,7 +7,7 @@
 @description:
 
 Usage - Single-GPU eval:
-    $ python eval.py runs/emnist/CRNN-e100.pth ../datasets/EMNIST/
+    $ python eval_plate.py runs/plate_ddp/crnn-plate-e100.pth ../datasets/git_plate/val_verify/
 
 """
 
@@ -18,14 +18,15 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from utils.model.crnn_lstm import CRNN
+# from utils.model.crnn_lstm import CRNN
+from utils.model.crnn_gru import CRNN
 from utils.dataset.plate import PlateDataset, PLATE_CHARS
 from utils.evaluator import Evaluator
 
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Eval CRNN with EMNIST')
-    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, default="runs/CRNN-e45.pth",
+    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, default="runs/plate/crnn-plate-e100.pth",
                         help='path to pretrained model')
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to val dataset')
 

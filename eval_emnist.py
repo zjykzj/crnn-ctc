@@ -7,7 +7,7 @@
 @description:
 
 Usage - Single-GPU eval:
-    $ python eval.py runs/emnist/CRNN-e100.pth ../datasets/EMNIST/
+    $ python eval_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/EMNIST/
 
 """
 
@@ -25,7 +25,7 @@ from utils.evaluator import Evaluator
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Eval CRNN with EMNIST')
-    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, default="runs/CRNN-e45.pth",
+    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, default="runs/emnist_ddp/crnn-emnist-e100.pth",
                         help='path to pretrained model')
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to val dataset')
 

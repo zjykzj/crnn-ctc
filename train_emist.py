@@ -7,10 +7,10 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python train.py ../crnn-ctc-loss-pytorch/EMNIST/ runs/
+    $ python train_emist.py ../crnn-ctc-loss-pytorch/EMNIST/ runs/emnist/
 
 Usage - Multi-GPU DDP training:
-    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist/
+    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_emist.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist_ddp/
 
 """
 

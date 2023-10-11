@@ -10,7 +10,7 @@ Usage - Single-GPU training:
     $ python train_plate.py ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate/
 
 Usage - Multi-GPU DDP training:
-    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_plate.py  --device 0,1,2,3  ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate_ddp/
+    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_plate.py --device 0,1,2,3 ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate_ddp/
 
 """
 
@@ -25,8 +25,8 @@ import torch.optim as optim
 import torch.distributed as dist
 from torch.utils.data import DataLoader, distributed
 
-from utils.model.crnn_lstm import CRNN
-# from utils.model.crnn_gru import CRNN
+# from utils.model.crnn_lstm import CRNN
+from utils.model.crnn_gru import CRNN
 # from utils.model.crnn_conv import CRNN
 from utils.loss import CTCLoss
 from utils.evaluator import Evaluator
