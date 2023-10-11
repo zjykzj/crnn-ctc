@@ -7,10 +7,10 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python train.py ../crnn-ctc-loss-pytorch/EMNIST/ runs/
+    $ python train_plate.py ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate/
 
 Usage - Multi-GPU DDP training:
-    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist/
+    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_plate.py  --device 0,1,2,3  ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate_ddp/
 
 """
 
@@ -46,7 +46,7 @@ def parse_opt():
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to plate val dataset')
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
-    parser.add_argument('--batch-size', type=int, default=256, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--batch-size', type=int, default=32, help='total batch size for all GPUs, -1 for autobatch')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -77,10 +77,9 @@ def train(opt, device):
     model = CRNN(num_classes=len(PLATE_CHARS), cfg=cfg).to(device)
     blank_label = 0
     criterion = CTCLoss(blank_label=blank_label).to(device)
-    # criterion = torch.nn.CTCLoss().to(device)
 
     learn_rate = 0.001 * WORLD_SIZE
-    weight_decay = 0.
+    weight_decay = 1e-5
     LOGGER.info(f"Final learning rate: {learn_rate}, weight decay: {weight_decay}")
     optimizer = optim.Adam(model.parameters(), lr=learn_rate, weight_decay=weight_decay)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 70, 90])
@@ -106,7 +105,7 @@ def train(opt, device):
     LOGGER.info("=> Start training")
     t0 = time.time()
     amp = True
-    scaler = torch.cuda.amp.GradScaler(enabled=amp)
+    # scaler = torch.cuda.amp.GradScaler(enabled=amp)
 
     # DDP mode
     cuda = device.type != 'cpu'
@@ -132,23 +131,20 @@ def train(opt, device):
             # targets = targets.to(device)
             targets = train_dataset.convert(targets)
             target_lengths = torch.IntTensor([len(t) for t in targets])
-            # targets = torch.concat(targets).to(device)
-            targets = torch.concat(targets).cpu()
+            targets = torch.concat(targets)
 
-            with torch.cuda.amp.autocast(amp):
-                outputs = model(images.to(device))
-                # cnn_output_width, N = outputs.shape[:2]
-                # input_lengths = torch.IntTensor(N).fill_(cnn_output_width)
-                loss = criterion(outputs, targets, target_lengths)
-                # preds_size = torch.IntTensor([outputs.size(0)] * batch_size)  # timestep * batchsize
-                # loss = criterion(outputs.to(device), targets.to(device), input_lengths.to(device), target_lengths.to(device))
-            scaler.scale(loss).backward()
+            # with torch.cuda.amp.autocast(amp):
+            outputs = model(images.to(device)).cpu()
+            loss = criterion(outputs, targets, target_lengths)
+            # scaler.scale(loss).backward()
+            loss.backward()
 
             if epoch <= warmup_epoch:
                 adjust_learning_rate(learn_rate, warmup_epoch, optimizer, epoch - 1, idx, len(train_dataloader))
 
-            scaler.step(optimizer)  # optimizer.step
-            scaler.update()
+            # scaler.step(optimizer)  # optimizer.step
+            # scaler.update()
+            optimizer.step()
             optimizer.zero_grad()
 
             if RANK in {-1, 0}:
@@ -156,7 +152,7 @@ def train(opt, device):
                 info = f"Epoch:{epoch} Batch:{idx} LR:{lr:.6f} Loss:{loss:.6f}"
                 pbar.set_description(info)
 
-        if RANK in {-1, 0} and epoch % 1 == 0 and epoch > 0:
+        if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
             save_path = os.path.join(output, f"crnn-plate-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
