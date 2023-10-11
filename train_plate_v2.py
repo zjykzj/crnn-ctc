@@ -77,6 +77,7 @@ def train(opt, device):
     model = CRNN(num_classes=len(PLATE_CHARS), cfg=cfg).to(device)
     blank_label = 0
     # criterion = CTCLoss(blank_label=blank_label).to(device)
+    # criterion = CTCLoss(blank_label=blank_label)
     criterion = torch.nn.CTCLoss()
 
     learn_rate = 0.001 * WORLD_SIZE
@@ -106,7 +107,7 @@ def train(opt, device):
     LOGGER.info("=> Start training")
     t0 = time.time()
     amp = True
-    scaler = torch.cuda.amp.GradScaler(enabled=amp)
+    # scaler = torch.cuda.amp.GradScaler(enabled=amp)
 
     # DDP mode
     cuda = device.type != 'cpu'
@@ -134,18 +135,20 @@ def train(opt, device):
             target_lengths = torch.IntTensor([len(t) for t in targets])
             targets = torch.concat(targets)
 
-            with torch.cuda.amp.autocast(amp):
-                outputs = model(images.to(device), export=False)
-                # loss = criterion(outputs, targets, target_lengths)
-                preds_size = torch.IntTensor([outputs.size(0)] * batch_size)  # timestep * batchsize
-                loss = criterion(outputs, targets, preds_size, target_lengths)
-            scaler.scale(loss).backward()
+            # with torch.cuda.amp.autocast(amp):
+            outputs = model(images.to(device), export=False).cpu()
+            preds_size = torch.IntTensor([outputs.size(0)] * batch_size)  # timestep * batchsize
+            # loss = criterion(outputs, targets, target_lengths)
+            loss = criterion(outputs, targets, preds_size, target_lengths)
+            # scaler.scale(loss).backward()
+            loss.backward()
 
             if epoch <= warmup_epoch:
                 adjust_learning_rate(learn_rate, warmup_epoch, optimizer, epoch - 1, idx, len(train_dataloader))
 
-            scaler.step(optimizer)  # optimizer.step
-            scaler.update()
+            # scaler.step(optimizer)  # optimizer.step
+            # scaler.update()
+            optimizer.step()
             optimizer.zero_grad()
 
             if RANK in {-1, 0}:

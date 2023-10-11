@@ -26,5 +26,6 @@ class CTCLoss(nn.Module):
         if target_lengths is None:
             target_lengths = torch.IntTensor([len(t) for t in targets])
 
+        # print(preds.shape, targets.shape, input_lengths, target_lengths)
         loss = self.loss(preds, targets, input_lengths, target_lengths)
         return loss
