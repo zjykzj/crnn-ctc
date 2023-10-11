@@ -24,6 +24,7 @@ class CTCLoss(nn.Module):
 
         input_lengths = torch.IntTensor(N).fill_(cnn_output_width)
         if target_lengths is None:
+            # Padded
             target_lengths = torch.IntTensor([len(t) for t in targets])
 
         # print(preds.shape, targets.shape, input_lengths, target_lengths)
