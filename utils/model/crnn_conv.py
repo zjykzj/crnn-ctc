@@ -60,7 +60,9 @@ class CRNN(nn.Module):
             b, c, h, w = x.size()
             assert h == 1, "the height of conv must be 1"
             conv = x.squeeze(2)  # b *512 * width
-            conv = conv.permute(2, 0, 1)  # [w, b, c]
+            # conv = conv.permute(2, 0, 1)  # [w, b, c]
+            # [N, C, W] -> [N, W, C]
+            conv = conv.transpose(2, 1)  # [w, b, c]
             output = F.log_softmax(conv, dim=2)
 
             return output

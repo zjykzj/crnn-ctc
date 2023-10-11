@@ -76,9 +76,9 @@ def train(opt, device):
     cfg = [16, 16, 32, 32, 'M', 64, 64, 'M', 96, 96, 'M', 128, 256]
     model = CRNN(num_classes=len(PLATE_CHARS), cfg=cfg).to(device)
     blank_label = 0
-    # criterion = CTCLoss(blank_label=blank_label).to(device)
+    criterion = CTCLoss(blank_label=blank_label).to(device)
     # criterion = CTCLoss(blank_label=blank_label)
-    criterion = torch.nn.CTCLoss()
+    # criterion = torch.nn.CTCLoss()
 
     learn_rate = 0.001 * WORLD_SIZE
     weight_decay = 0.
@@ -137,9 +137,9 @@ def train(opt, device):
 
             # with torch.cuda.amp.autocast(amp):
             outputs = model(images.to(device), export=False).cpu()
-            preds_size = torch.IntTensor([outputs.size(0)] * batch_size)  # timestep * batchsize
-            # loss = criterion(outputs, targets, target_lengths)
-            loss = criterion(outputs, targets, preds_size, target_lengths)
+            # preds_size = torch.IntTensor([outputs.size(0)] * batch_size)  # timestep * batchsize
+            loss = criterion(outputs, targets, target_lengths)
+            # loss = criterion(outputs, targets, preds_size, target_lengths)
             # scaler.scale(loss).backward()
             loss.backward()
 
