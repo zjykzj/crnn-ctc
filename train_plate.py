@@ -76,8 +76,8 @@ def train(opt, device):
     cfg = [16, 16, 32, 32, 'M', 64, 64, 'M', 96, 96, 'M', 128, 256]
     model = CRNN(num_classes=len(PLATE_CHARS), cfg=cfg).to(device)
     blank_label = 0
-    # criterion = CTCLoss(blank_label=blank_label).to(device)
-    criterion = torch.nn.CTCLoss()
+    criterion = CTCLoss(blank_label=blank_label).to(device)
+    # criterion = torch.nn.CTCLoss().to(device)
 
     learn_rate = 0.001 * WORLD_SIZE
     weight_decay = 0.
@@ -132,13 +132,16 @@ def train(opt, device):
             # targets = targets.to(device)
             targets = train_dataset.convert(targets)
             target_lengths = torch.IntTensor([len(t) for t in targets])
-            targets = torch.concat(targets)
+            # targets = torch.concat(targets).to(device)
+            targets = torch.concat(targets).cpu()
 
             with torch.cuda.amp.autocast(amp):
-                outputs = model(images.to(device), export=False)
-                # loss = criterion(outputs, targets, target_lengths)
-                preds_size = torch.IntTensor([outputs.size(0)] * batch_size)  # timestep * batchsize
-                loss = criterion(outputs, targets, preds_size, target_lengths)
+                outputs = model(images.to(device))
+                # cnn_output_width, N = outputs.shape[:2]
+                # input_lengths = torch.IntTensor(N).fill_(cnn_output_width)
+                loss = criterion(outputs, targets, target_lengths)
+                # preds_size = torch.IntTensor([outputs.size(0)] * batch_size)  # timestep * batchsize
+                # loss = criterion(outputs.to(device), targets.to(device), input_lengths.to(device), target_lengths.to(device))
             scaler.scale(loss).backward()
 
             if epoch <= warmup_epoch:
@@ -165,7 +168,7 @@ def train(opt, device):
                 images = images.to(device)
                 targets = val_dataset.convert(targets)
                 with torch.no_grad():
-                    outputs = model(images, export=True).cpu()
+                    outputs = model(images).cpu()
 
                 acc = evaluator.update(outputs, targets)
                 info = f"Batch:{idx} ACC:{acc * 100:.3f}"
