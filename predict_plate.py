@@ -23,6 +23,8 @@ import torch
 from utils.model.crnn_gru import CRNN
 from utils.dataset.plate import PLATE_CHARS
 
+# cp assets/fonts/simhei.ttf /usr/share/fonts/truetype/noto/
+# rm -rf ~/.cache/matplotlib/*
 plt.rcParams["font.sans-serif"] = ["SimHei"]  # 设置字体
 plt.rcParams["axes.unicode_minus"] = False  # 该语句解决图像中的“-”负号的乱码问题
 
