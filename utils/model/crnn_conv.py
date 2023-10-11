@@ -45,37 +45,17 @@ class CRNN(nn.Module):
         self.loc = nn.MaxPool2d((5, 2), (1, 1), (0, 1), ceil_mode=False)
         self.newCnn = nn.Conv2d(cfg[-1], num_classes, 1, 1)
 
-    def forward(self, x, export=False):
+    def forward(self, x):
         x = self.feature(x)
         x = self.loc(x)
         x = self.newCnn(x)
 
-        if export:
-            # [B, C, H, W] -> [B, C, W]
-            conv = x.squeeze(2)  # b *512 * width
-            # [B, C, W] -> [B, W, C]
-            conv = conv.transpose(2, 1)  # [w, b, c]
-            return conv
-        else:
-            b, c, h, w = x.size()
-            assert h == 1, "the height of conv must be 1"
-            conv = x.squeeze(2)  # b *512 * width
-            # conv = conv.permute(2, 0, 1)  # [w, b, c]
-            # [N, C, W] -> [N, W, C]
-            conv = conv.transpose(2, 1)  # [w, b, c]
-            output = F.log_softmax(conv, dim=2)
-
-            return output
-
-        # b, c, h, w = x.size()
-        # assert h == 1, "the height of conv must be 1"
-        # conv = x.squeeze(2)
-        # assert conv.shape == (b, c, w), conv.shape
-        # conv = conv.permute(0, 2, 1)
-        # assert conv.shape == (b, w, c), conv.shape
-        # out = F.log_softmax(conv, dim=2)
-        #
-        # return out
+        # [B, C, H, W] -> [B, C, W]
+        conv = x.squeeze(2)  # b *512 * width
+        # [B, C, W] -> [B, W, C]
+        conv = conv.transpose(2, 1)
+        out = F.log_softmax(conv, dim=2)
+        return out
 
 
 if __name__ == '__main__':
@@ -83,10 +63,10 @@ if __name__ == '__main__':
     cfg = [32, 'M', 64, 'M', 128, 'M', 256]
     model = CRNN(num_classes=78, cfg=cfg)
     # print(model)
-    out = model(x, export=True)
+    out = model(x)
     print(out.shape)
 
     model = CRNN(num_classes=78, cfg=cfg)
     # print(model)
-    out = model(x, export=True)
+    out = model(x)
     print(out.shape)

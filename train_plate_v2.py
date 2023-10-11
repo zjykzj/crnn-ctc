@@ -136,7 +136,7 @@ def train(opt, device):
             targets = torch.concat(targets)
 
             # with torch.cuda.amp.autocast(amp):
-            outputs = model(images.to(device), export=False).cpu()
+            outputs = model(images.to(device)).cpu()
             # preds_size = torch.IntTensor([outputs.size(0)] * batch_size)  # timestep * batchsize
             loss = criterion(outputs, targets, target_lengths)
             # loss = criterion(outputs, targets, preds_size, target_lengths)
@@ -168,7 +168,7 @@ def train(opt, device):
                 images = images.to(device)
                 targets = val_dataset.convert(targets)
                 with torch.no_grad():
-                    outputs = model(images, export=True).cpu()
+                    outputs = model(images).cpu()
 
                 acc = evaluator.update(outputs, targets)
                 info = f"Batch:{idx} ACC:{acc * 100:.3f}"
