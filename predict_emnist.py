@@ -7,7 +7,7 @@
 @description:
 
 Usage: Predict EMNIST:
-    $ python predict.py runs/emnist/CRNN-e100.pth ../datasets/EMNIST/ runs/
+    $ python predict_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/EMNIST/ runs/
 
 """
 
@@ -81,7 +81,7 @@ def predict(val_root, pretrained, save_dir):
         plt.title(title)
         plt.imshow(np_images, cmap='gray')
         plt.axis('off')
-    plt.savefig(os.path.join(save_dir, "predict.jpg"))
+    plt.savefig(os.path.join(save_dir, "predict_emnist.jpg"))
 
 
 def main():
