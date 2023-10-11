@@ -32,6 +32,7 @@
 
 ## Latest News
 
+* ***[2023/10/11][v0.2.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.2.0). Support training/evaluation/prediction of CRNN+CTC based on license plate.***
 * ***[2023/10/10][v0.1.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.1.0). Support training/evaluation/prediction of CRNN+CTC based on EMNIST digital characters.***
 
 ## Background
@@ -89,7 +90,7 @@ Label: [6 1 7 2 0] Pred: [6 1 7 2 0]
 Label: [8 8 9 9 5] Pred: [8 8 9 9 5]
 ```
 
-![](assets/predict.jpg)
+![](assets/predict_emnist.jpg)
 
 ```shell
 $ python predict_plate.py runs/plate_ddp/crnn-plate-e100.pth ./assets/plate/宁A87J92_0.jpg runs/
