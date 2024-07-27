@@ -50,24 +50,22 @@ pip install -r requirements.txt
 ### Train
 
 ```shell
+# EMNIST
 $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_emist.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist_ddp/
-```
-
-```shell
+# Plate
 $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_plate.py --device 0,1,2,3 ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate_ddp/
 ```
 
 ### Eval
 
 ```shell
+# EMNIST
 $ python eval_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/EMNIST/
 args: Namespace(pretrained='runs/emnist_ddp/crnn-emnist-e100.pth', val_root='../datasets/EMNIST/')
 Loading CRNN pretrained: runs/emnist_ddp/crnn-emnist-e100.pth
 Batch:62 ACC:100.000: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:02<00:00, 30.82it/s]
 ACC:95.100
-```
-
-```shell
+# Plate
 $ python eval_plate.py runs/plate_ddp/crnn-plate-e100.pth ../datasets/git_plate/val_verify/
 args: Namespace(pretrained='runs/plate_ddp/crnn-plate-e100.pth', val_root='../datasets/git_plate/val_verify/')
 Loading CRNN pretrained: runs/plate_ddp/crnn-plate-e100.pth
