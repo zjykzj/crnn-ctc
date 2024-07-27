@@ -8,6 +8,7 @@
 """
 
 import cv2
+import glob
 import os.path
 
 from tqdm import tqdm
@@ -41,7 +42,7 @@ def parse_ccpd(file_name):
     plate_name.append(alphabets[int(plate_indexes[1])])
     for i in range(2, len(plate_indexes)):
         plate_name.append(ads[int(plate_indexes[i])])
-    plate_name = '_'.join(plate_name)
+    plate_name = ''.join(plate_name)
 
     return box_xyxy, plate_name
 
@@ -77,7 +78,11 @@ def process_ccpd2019(data_root, dst_root):
                 x1, y1, x2, y2 = box_xyxy
                 plate_img = src_img[y1:y2, x1:x2]
 
-                dst_file_path = os.path.join(dst_data_root, plate_name + '.jpg')
+                file_len = len(list(glob.glob(os.path.join(dst_data_root, f"{plate_name}*.jpg"))))
+                if file_len > 0:
+                    dst_file_path = os.path.join(dst_data_root, plate_name + f'-{file_len}.jpg')
+                else:
+                    dst_file_path = os.path.join(dst_data_root, plate_name + f'.jpg')
                 # assert not os.path.exists(dst_file_path), f"{file_path}\n{dst_file_path}"
                 cv2.imwrite(dst_file_path, plate_img)
 
@@ -108,7 +113,11 @@ def process_ccpd2020(data_root, dst_root):
             x1, y1, x2, y2 = box_xyxy
             plate_img = src_img[y1:y2, x1:x2]
 
-            dst_file_path = os.path.join(dst_data_root, plate_name + '.jpg')
+            file_len = len(list(glob.glob(os.path.join(dst_data_root, f"{plate_name}*.jpg"))))
+            if file_len > 0:
+                dst_file_path = os.path.join(dst_data_root, plate_name + f'-{file_len}.jpg')
+            else:
+                dst_file_path = os.path.join(dst_data_root, plate_name + f'.jpg')
             # assert not os.path.exists(dst_file_path), f"{file_name}\n{dst_file_path}"
             cv2.imwrite(dst_file_path, plate_img)
 
