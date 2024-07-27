@@ -78,11 +78,10 @@ def process_ccpd2019(data_root, dst_root):
                 x1, y1, x2, y2 = box_xyxy
                 plate_img = src_img[y1:y2, x1:x2]
 
-                file_len = len(list(glob.glob(os.path.join(dst_data_root, f"{plate_name}*.jpg"))))
-                if file_len > 0:
+                dst_file_path = os.path.join(dst_data_root, plate_name + f'.jpg')
+                if os.path.exists(dst_file_path):
+                    file_len = len(list(glob.glob(os.path.join(dst_data_root, f"{plate_name}*.jpg"))))
                     dst_file_path = os.path.join(dst_data_root, plate_name + f'-{file_len}.jpg')
-                else:
-                    dst_file_path = os.path.join(dst_data_root, plate_name + f'.jpg')
                 # assert not os.path.exists(dst_file_path), f"{file_path}\n{dst_file_path}"
                 cv2.imwrite(dst_file_path, plate_img)
 
@@ -113,11 +112,10 @@ def process_ccpd2020(data_root, dst_root):
             x1, y1, x2, y2 = box_xyxy
             plate_img = src_img[y1:y2, x1:x2]
 
-            file_len = len(list(glob.glob(os.path.join(dst_data_root, f"{plate_name}*.jpg"))))
-            if file_len > 0:
+            dst_file_path = os.path.join(dst_data_root, plate_name + f'.jpg')
+            if os.path.exists(dst_file_path):
+                file_len = len(list(glob.glob(os.path.join(dst_data_root, f"{plate_name}*.jpg"))))
                 dst_file_path = os.path.join(dst_data_root, plate_name + f'-{file_len}.jpg')
-            else:
-                dst_file_path = os.path.join(dst_data_root, plate_name + f'.jpg')
             # assert not os.path.exists(dst_file_path), f"{file_name}\n{dst_file_path}"
             cv2.imwrite(dst_file_path, plate_img)
 
