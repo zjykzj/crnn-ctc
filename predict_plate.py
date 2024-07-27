@@ -26,6 +26,22 @@ import torch
 plt.rcParams["font.sans-serif"] = ["SimHei"]  # 设置字体
 plt.rcParams["axes.unicode_minus"] = False  # 该语句解决图像中的“-”负号的乱码问题
 
+import importlib
+
+# 根据脚本是否作为主模块运行来决定导入方式
+if __name__ == '__main__':
+    # 直接运行时，使用绝对导入
+    CRNN = importlib.import_module('utils.model.crnn_gru').CRNN
+    PLATE_CHARS = importlib.import_module('utils.dataset.plate').PLATE_CHARS
+else:
+    # 被导入时，尝试使用相对导入，如果失败则回退到绝对导入
+    try:
+        CRNN = importlib.import_module('.utils.model.crnn_gru', package=__package__).CRNN
+        PLATE_CHARS = importlib.import_module('.utils.dataset.plate', package=__package__).PLATE_CHARS
+    except ValueError:
+        CRNN = importlib.import_module('utils.model.crnn_gru').CRNN
+        PLATE_CHARS = importlib.import_module('utils.dataset.plate').PLATE_CHARS
+
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Predict CRNN with EMNIST')
@@ -39,15 +55,7 @@ def parse_opt():
     return args
 
 
-@torch.no_grad()
-def predict(image=None, image_path=None, pretrained=None, save_dir=None, is_show=False):
-    if image is None:
-        from utils.model.crnn_gru import CRNN
-        from utils.dataset.plate import PLATE_CHARS
-    else:
-        from .utils.model.crnn_gru import CRNN
-        from .utils.dataset.plate import PLATE_CHARS
-
+def load_model(pretrained=None, device=None):
     model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=9)
     if pretrained is not None:
         if isinstance(pretrained, list):
@@ -58,17 +66,16 @@ def predict(image=None, image_path=None, pretrained=None, save_dir=None, is_show
         model.load_state_dict(ckpt, strict=True)
     model.eval()
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if device is None:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
+    return model, device
+
+
+@torch.no_grad()
+def predict(image, model=None, device=None):
     # Data
-    if image_path is not None:
-        assert os.path.isfile(image_path), image_path
-        image = cv2.imread(image_path)
-    else:
-        assert isinstance(image, np.ndarray)
-    if image.shape[-1] == 4:
-        image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
     img_w = 168
     img_h = 48
     resize_image = cv2.resize(image, (img_w, img_h))
@@ -93,32 +100,41 @@ def predict(image=None, image_path=None, pretrained=None, save_dir=None, is_show
     # pred_plate = ''.join(pred_plate)
     pred_plate = ''.join(pred_plate[:2]) + "·" + ''.join(pred_plate[2:])
 
-    if is_show:
-        # Draw
-        plt.figure()
-        title = f"Pred: {pred_plate}"
-        print(title)
-
-        plt.title(title)
-        plt.imshow(image)
-        plt.axis('off')
-
-        if image_path is not None:
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-
-            image_name = os.path.basename(image_path)
-            res_path = os.path.join(save_dir, f"plate_{image_name}")
-            print(f'Save to {res_path}')
-            plt.savefig(res_path)
-
     return pred_plate
 
 
 def main():
     args = parse_opt()
 
-    predict(image_path=args.image_path, pretrained=args.pretrained, save_dir=args.save_dir, is_show=True)
+    image_path = args.image_path
+    assert os.path.isfile(image_path), image_path
+    image = cv2.imread(image_path)
+    if len(image.shape) == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+
+    # Model
+    model, device = load_model(pretrained=args.pretrained)
+
+    # Predict
+    pred_plate = predict(image=image, model=model, device=device)
+
+    # Draw
+    plt.figure()
+    title = f"Pred: {pred_plate}"
+    print(title)
+
+    plt.title(title)
+    plt.imshow(image)
+    plt.axis('off')
+
+    # Save
+    save_dir = args.save_dir
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+    image_name = os.path.basename(image_path)
+    res_path = os.path.join(save_dir, f"plate_{image_name}")
+    print(f'Save to {res_path}')
+    plt.savefig(res_path)
 
 
 if __name__ == '__main__':
