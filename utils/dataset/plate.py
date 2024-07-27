@@ -18,6 +18,10 @@ RANK = int(os.getenv('RANK', -1))
 
 PLATE_CHARS = "#京沪津渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新学警港澳挂使领民航危0123456789ABCDEFGHJKLMNPQRSTUVWXYZ险品"
 
+PLATE_DICT = dict()
+for i in range(len(PLATE_CHARS)):
+    PLATE_DICT[PLATE_CHARS[i]] = i
+
 
 def load_data(data_root, pattern='*.json'):
     assert os.path.isdir(data_root)
@@ -41,17 +45,13 @@ def is_plate_right(plate_name):
 
 
 def create_plate_label(img_list):
-    plate_dict = dict()
-    for i in range(len(PLATE_CHARS)):
-        plate_dict[PLATE_CHARS[i]] = i
-
     data_list = list()
     label_dict = dict()
     for img_path in img_list:
         assert os.path.isfile(img_path), img_path
 
-        img_name = os.path.basename(img_path)
-        label_name = img_name.split("_")[0]
+        img_name = os.path.splitext(os.path.basename(img_path))[0]
+        label_name = img_name.split("-")[0]
         if " " in label_name:
             continue
         if not is_plate_right(label_name):
@@ -59,7 +59,7 @@ def create_plate_label(img_list):
 
         label = []
         for i in range(len(label_name)):
-            label.append(plate_dict[label_name[i]])
+            label.append(PLATE_DICT[label_name[i]])
         label_dict[label_name] = label
 
         data_list.append([img_path, label_name])
