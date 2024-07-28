@@ -9,10 +9,14 @@
 
 import os
 import cv2
+import random
+
+import numpy as np
 from pathlib import Path
 
 import torch
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 RANK = int(os.getenv('RANK', -1))
 
@@ -83,6 +87,15 @@ class PlateDataset(Dataset):
         self.dataset_len = len(data_list)
         self.label_dict = label_dict
 
+        self.transform = transforms.Compose([
+            transforms.ToPILImage(),  # 将 numpy array 或 tensor 转换成 PIL Image
+            transforms.RandomRotation(15, fill=0),  # 限制旋转角度
+            transforms.RandomAffine(degrees=5, translate=(0.1, 0.1), scale=(0.9, 1.1)),  # 减小仿射变换的程度
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # 适度的颜色变换
+            # transforms.ToTensor(),  # 转换为 tensor
+            # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用 ImageNet 的均值和标准差进行归一化
+        ])
+
     def __getitem__(self, index):
         assert index < self.dataset_len
 
@@ -90,6 +103,10 @@ class PlateDataset(Dataset):
         image = cv2.imread(img_path)
         if image.shape[-1] == 4:
             image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+
+        if self.is_train and random.random() > 0.5:
+            image = self.transform(image)
+            image = np.array(image, dtype=np.uint8)
         image = cv2.resize(image, (self.img_w, self.img_h))
 
         data = torch.from_numpy(image).float() / 255.
