@@ -7,10 +7,7 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python train_plate.py ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate/
-
-Usage - Multi-GPU DDP training:
-    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_plate.py --device 0,1,2,3 ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate_ddp/
+    $ python3 train_plate.py --batch-size 256 --device 0 ../datasets/chinese_license_plate/recog/ ../datasets/chinese_license_plate/recog/ ./runs/plate_b256/
 
 """
 
@@ -25,9 +22,7 @@ import torch.optim as optim
 import torch.distributed as dist
 from torch.utils.data import DataLoader, distributed
 
-# from utils.model.crnn_lstm import CRNN
-from utils.model.crnn_gru import CRNN
-# from utils.model.crnn_conv import CRNN
+from utils.model.crnn import CRNN
 from utils.loss import CTCLoss
 from utils.evaluator import Evaluator
 from utils.torchutil import select_device
@@ -47,7 +42,8 @@ def parse_opt():
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to plate val dataset')
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
-    parser.add_argument('--batch-size', type=int, default=32, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--batch-size', type=int, default=256, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--use-gru', action='store_true', help='use nn.GRU instead of nn.LSTM')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -68,14 +64,12 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
 
 
 def train(opt, device):
-    train_root, val_root, batch_size, output = opt.train_root, opt.val_root, opt.batch_size, opt.output
+    train_root, val_root, batch_size, use_gru, output = opt.train_root, opt.val_root, opt.batch_size, opt.use_gru, opt.output
     if RANK in {-1, 0} and not os.path.exists(output):
         os.makedirs(output)
 
     LOGGER.info("=> Create Model")
-    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=9).to(device)
-    # cfg = [16, 16, 32, 32, 'M', 64, 64, 'M', 96, 96, 'M', 128, 256]
-    # model = CRNN(num_classes=len(PLATE_CHARS), cfg=cfg).to(device)
+    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=2, use_gru=use_gru).to(device)
     blank_label = 0
     criterion = CTCLoss(blank_label=blank_label).to(device)
 
