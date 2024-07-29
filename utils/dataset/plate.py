@@ -8,17 +8,18 @@
 """
 
 import os
-import cv2
 import random
-
-import numpy as np
 from pathlib import Path
 
+import cv2
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
 RANK = int(os.getenv('RANK', -1))
+
+DELIMITER = '_'
 
 PLATE_CHARS = "#京沪津渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新学警港澳挂使领民航危0123456789ABCDEFGHJKLMNPQRSTUVWXYZ险品"
 
@@ -27,7 +28,7 @@ for i in range(len(PLATE_CHARS)):
     PLATE_DICT[PLATE_CHARS[i]] = i
 
 
-def load_data(data_root, pattern='*.json'):
+def load_data(data_root, pattern='*.jpg'):
     assert os.path.isdir(data_root)
 
     data_list = list()
@@ -55,16 +56,19 @@ def create_plate_label(img_list):
         assert os.path.isfile(img_path), img_path
 
         img_name = os.path.splitext(os.path.basename(img_path))[0]
-        label_name = img_name.split("-")[0]
+        label_name = img_name.split(DELIMITER)[0]
         if " " in label_name:
+            continue
+        if len(label_name) < 3:
             continue
         if not is_plate_right(label_name):
             continue
 
-        label = []
-        for i in range(len(label_name)):
-            label.append(PLATE_DICT[label_name[i]])
-        label_dict[label_name] = label
+        if label_name not in label_dict.keys():
+            label = []
+            for i in range(len(label_name)):
+                label.append(PLATE_DICT[label_name[i]])
+            label_dict[label_name] = label
 
         data_list.append([img_path, label_name])
     return data_list, label_dict
@@ -72,13 +76,62 @@ def create_plate_label(img_list):
 
 class PlateDataset(Dataset):
 
-    def __init__(self, data_root, is_train=True, img_h=48, img_w=168):
+    def __init__(self, data_root, is_train=True, img_h=48, img_w=168,
+                 only_ccpd2019=False, only_ccpd2020=False, only_others=False):
         self.data_root = data_root
         self.is_train = is_train
         self.img_w = img_w
         self.img_h = img_h
 
-        img_list = load_data(data_root, pattern="*.jpg")
+        if is_train:
+            if only_ccpd2019:
+                dir_name_list = [
+                    'CCPD2019/train',
+                    'CCPD2019/val',
+                ]
+            elif only_ccpd2020:
+                dir_name_list = [
+                    'CCPD2020/train',
+                    'CCPD2020/val',
+                ]
+            elif only_others:
+                dir_name_list = [
+                    'git_plate/CCPD_CRPD_OTHER_ALL',
+                ]
+            else:
+                dir_name_list = [
+                    'CCPD2019/train',
+                    'CCPD2019/val',
+                    'CCPD2020/train',
+                    'CCPD2020/val',
+                    'git_plate/CCPD_CRPD_OTHER_ALL',
+                ]
+        else:
+            if only_ccpd2019:
+                dir_name_list = [
+                    'CCPD2019/test',
+                ]
+            elif only_ccpd2020:
+                dir_name_list = [
+                    'CCPD2020/test',
+                ]
+            elif only_others:
+                dir_name_list = [
+                    'git_plate/val_verify',
+                ]
+            else:
+                dir_name_list = [
+                    'CCPD2019/test',
+                    'CCPD2020/test',
+                    'git_plate/val_verify',
+                ]
+
+        img_list = []
+        for dir_name in dir_name_list:
+            data_dir = os.path.join(data_root, dir_name)
+            assert os.path.isdir(data_dir), data_dir
+            img_list.extend(load_data(data_dir, pattern="*.jpg"))
+        assert len(img_list) > 0, data_root
         data_list, label_dict = create_plate_label(img_list)
         if RANK in {-1, 0}:
             print(f"Load {'train' if is_train else 'test'} data: {len(data_list)}")
