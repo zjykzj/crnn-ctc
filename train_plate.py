@@ -7,7 +7,8 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python3 train_plate.py --batch-size 256 --device 0 ../datasets/chinese_license_plate/recog/ ../datasets/chinese_license_plate/recog/ ./runs/plate_b256/
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_lstm-plate-b256/ --batch-size 256 --device 0
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_gru-plate-b256/ --batch-size 256 --device 0 --use-gru
 
 """
 
@@ -38,8 +39,7 @@ WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Training')
-    parser.add_argument('train_root', metavar='DIR', type=str, help='path to plate train dataset')
-    parser.add_argument('val_root', metavar='DIR', type=str, help='path to plate val dataset')
+    parser.add_argument('data', metavar='DIR', type=str, help='path to chinese_license_plate dataset')
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
     parser.add_argument('--batch-size', type=int, default=256, help='total batch size for all GPUs, -1 for autobatch')
@@ -64,7 +64,7 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
 
 
 def train(opt, device):
-    train_root, val_root, batch_size, use_gru, output = opt.train_root, opt.val_root, opt.batch_size, opt.use_gru, opt.output
+    data_root, batch_size, use_gru, output = opt.data, opt.batch_size, opt.use_gru, opt.output
     if RANK in {-1, 0} and not os.path.exists(output):
         os.makedirs(output)
 
@@ -80,7 +80,7 @@ def train(opt, device):
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 70, 90])
 
     LOGGER.info("=> Load data")
-    train_dataset = PlateDataset(train_root, is_train=True, img_w=168, img_h=48)
+    train_dataset = PlateDataset(data_root, is_train=True, img_w=168, img_h=48)
     sampler = None if LOCAL_RANK == -1 else distributed.DistributedSampler(train_dataset, shuffle=True)
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=batch_size,
@@ -90,7 +90,7 @@ def train(opt, device):
                                   drop_last=True,
                                   pin_memory=True)
     if RANK in {-1, 0}:
-        val_dataset = PlateDataset(val_root, is_train=False, img_w=168, img_h=48)
+        val_dataset = PlateDataset(data_root, is_train=False, img_w=168, img_h=48)
         val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, drop_last=False,
                                     pin_memory=True)
 
@@ -149,7 +149,10 @@ def train(opt, device):
 
         if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
-            save_path = os.path.join(output, f"crnn-plate-e{epoch}.pth")
+            if use_gru:
+                save_path = os.path.join(output, f"crnn_gru-plate-b{batch_size}-e{epoch}.pth")
+            else:
+                save_path = os.path.join(output, f"crnn_lstm-plate-b{batch_size}-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 

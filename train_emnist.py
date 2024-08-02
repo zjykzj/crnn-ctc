@@ -7,10 +7,8 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python train_emist.py ../crnn-ctc-loss-pytorch/EMNIST/ runs/emnist/
-
-Usage - Multi-GPU DDP training:
-    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_emist.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist_ddp/
+    $ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn_lstm-emnist-b512/ --batch-size 512 --device 0
+    $ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn_gru-emnist-b512/ --batch-size 512 --device 0 --use-gru
 
 """
 
@@ -25,14 +23,14 @@ import torch.optim as optim
 import torch.distributed as dist
 from torch.utils.data import DataLoader, distributed
 
-from utils.model.crnn_gru import CRNN
+from utils.model.crnn import CRNN
 from utils.loss import CTCLoss
 from utils.evaluator import Evaluator
 from utils.torchutil import select_device
 from utils.ddputil import smart_DDP
 from utils.logger import LOGGER
 from utils.general import init_seeds
-from utils.dataset.emnist import EMNISTDataset
+from utils.dataset.emnist import EMNISTDataset, DIGITS_CHARS
 
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
@@ -41,10 +39,12 @@ WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Training')
-    parser.add_argument('data_root', metavar='DIR', type=str, help='path to EMNIST dataset')
+    parser.add_argument('data', metavar='DIR', type=str, help='path to EMNIST dataset')
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
-    parser.add_argument('--batch-size', type=int, default=32, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--batch-size', type=int, default=512, help='total batch size for all GPUs, -1 for autobatch')
+
+    parser.add_argument('--use-gru', action='store_true', help='use nn.GRU instead of nn.LSTM')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -65,13 +65,13 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
 
 
 def train(opt, device):
-    data_root, batch_size, output = opt.data_root, opt.batch_size, opt.output
+    data_root, batch_size, output, use_gru = opt.data, opt.batch_size, opt.output, opt.use_gru
     if RANK in {-1, 0} and not os.path.exists(output):
         os.makedirs(output)
 
     LOGGER.info("=> Create Model")
-    model = CRNN(in_channel=1, num_classes=11, cnn_output_height=4).to(device)
-    blank_label = 10
+    model = CRNN(in_channel=1, num_classes=len(DIGITS_CHARS), cnn_output_height=1, use_gru=use_gru).to(device)
+    blank_label = len(DIGITS_CHARS) - 1
     criterion = CTCLoss(blank_label=blank_label).to(device)
 
     learn_rate = 0.001 * WORLD_SIZE
@@ -81,7 +81,10 @@ def train(opt, device):
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 70, 90])
 
     LOGGER.info("=> Load data")
-    train_dataset = EMNISTDataset(data_root, is_train=True, num_of_sequences=10000, digits_per_sequence=5)
+    img_h = 32
+    digits_per_sequence = 5
+    train_dataset = EMNISTDataset(data_root, is_train=True, num_of_sequences=100000,
+                                  digits_per_sequence=digits_per_sequence, img_h=img_h)
     sampler = None if LOCAL_RANK == -1 else distributed.DistributedSampler(train_dataset, shuffle=True)
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=batch_size,
@@ -91,7 +94,8 @@ def train(opt, device):
                                   drop_last=False,
                                   pin_memory=True)
     if RANK in {-1, 0}:
-        val_dataset = EMNISTDataset(data_root, is_train=False, num_of_sequences=2000, digits_per_sequence=5)
+        val_dataset = EMNISTDataset(data_root, is_train=False, num_of_sequences=5000,
+                                    digits_per_sequence=digits_per_sequence, img_h=img_h)
         val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, drop_last=False,
                                     pin_memory=True)
 
@@ -144,7 +148,10 @@ def train(opt, device):
 
         if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
-            save_path = os.path.join(output, f"crnn-emnist-e{epoch}.pth")
+            if use_gru:
+                save_path = os.path.join(output, f"crnn_gru-emnist-b{batch_size}-e{epoch}.pth")
+            else:
+                save_path = os.path.join(output, f"crnn_lstm-emnist-b{batch_size}-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 
