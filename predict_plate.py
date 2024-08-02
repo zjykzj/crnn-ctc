@@ -31,32 +31,33 @@ import importlib
 # 根据脚本是否作为主模块运行来决定导入方式
 if __name__ == '__main__':
     # 直接运行时，使用绝对导入
-    CRNN = importlib.import_module('utils.model.crnn_gru').CRNN
+    CRNN = importlib.import_module('utils.model.crnn').CRNN
     PLATE_CHARS = importlib.import_module('utils.dataset.plate').PLATE_CHARS
 else:
     # 被导入时，尝试使用相对导入，如果失败则回退到绝对导入
     try:
-        CRNN = importlib.import_module('.utils.model.crnn_gru', package=__package__).CRNN
+        CRNN = importlib.import_module('.utils.model.crnn', package=__package__).CRNN
         PLATE_CHARS = importlib.import_module('.utils.dataset.plate', package=__package__).PLATE_CHARS
     except ValueError:
-        CRNN = importlib.import_module('utils.model.crnn_gru').CRNN
+        CRNN = importlib.import_module('utils.model.crnn').CRNN
         PLATE_CHARS = importlib.import_module('utils.dataset.plate').PLATE_CHARS
 
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Predict CRNN with EMNIST')
-    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, default="runs/emnist/CRNN-e100.pth",
-                        help='path to pretrained model')
+    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, help='path to pretrained model')
     parser.add_argument('image_path', metavar='IMAGE', type=str, help='path to image path')
     parser.add_argument('save_dir', metavar='DST', type=str, help='path to save dir')
+
+    parser.add_argument('--use-gru', action='store_true', help='use nn.GRU instead of nn.LSTM')
 
     args = parser.parse_args()
     print(f"args: {args}")
     return args
 
 
-def load_model(pretrained=None, device=None):
-    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=9)
+def load_model(pretrained=None, device=None, use_gru=False):
+    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=2, use_gru=use_gru)
     if pretrained is not None:
         if isinstance(pretrained, list):
             pretrained = pretrained[0]
@@ -113,7 +114,7 @@ def main():
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
 
     # Model
-    model, device = load_model(pretrained=args.pretrained)
+    model, device = load_model(pretrained=args.pretrained, use_gru=args.use_gru)
 
     # Predict
     pred_plate = predict(image=image, model=model, device=device)

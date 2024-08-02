@@ -7,7 +7,8 @@
 @description:
 
 Usage: Predict EMNIST:
-    $ python predict_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/EMNIST/ runs/
+    $ python3 predict_emnist.py runs/crnn_lstm-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/
+    $ python3 predict_emnist.py runs/crnn_gru-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/ --use-gru
 
 """
 
@@ -21,16 +22,17 @@ import matplotlib.pyplot as plt
 
 import torch
 
-from utils.model.crnn_gru import CRNN
-from utils.dataset.emnist import EMNISTDataset
+from utils.model.crnn import CRNN
+from utils.dataset.emnist import EMNISTDataset, DIGITS_CHARS
 
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Predict CRNN with EMNIST')
-    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, default="runs/emnist/CRNN-e100.pth",
-                        help='path to pretrained model')
+    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, help='path to pretrained model')
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to val dataset')
     parser.add_argument('save_dir', metavar='DST', type=str, help='path to save dir')
+
+    parser.add_argument('--use-gru', action='store_true', help='use nn.GRU instead of nn.LSTM')
 
     args = parser.parse_args()
     print(f"args: {args}")
@@ -38,8 +40,8 @@ def parse_opt():
 
 
 @torch.no_grad()
-def predict(val_root, pretrained, save_dir):
-    model = CRNN(in_channel=1, num_classes=11, cnn_output_height=4)
+def predict(args, val_root, pretrained, save_dir):
+    model = CRNN(in_channel=1, num_classes=len(DIGITS_CHARS), cnn_output_height=1, use_gru=args.use_gru)
     print(f"Loading CRNN pretrained: {pretrained}")
     ckpt = torch.load(pretrained, map_location='cpu')
     ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
@@ -49,13 +51,14 @@ def predict(val_root, pretrained, save_dir):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
+    img_h = 32
     digits_per_sequence = 5
-    val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=2000,
-                                digits_per_sequence=digits_per_sequence)
+    val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=50000,
+                                digits_per_sequence=digits_per_sequence, img_h=img_h)
 
     plt.figure(figsize=(10, 6))
 
-    blank_label = 10
+    blank_label = len(DIGITS_CHARS) - 1
     for i in range(1, 7):
         random_index = np.random.randint(len(val_dataset))
         sequence, emnist_labels, transformed_images = val_dataset.__getitem__(random_index, return_tf=True)
@@ -72,8 +75,7 @@ def predict(val_root, pretrained, save_dir):
         emnist_labels = emnist_labels.numpy()
         # print(pred, emnist_labels)
 
-        np_images = (transformed_images * 255).numpy()
-        np_images = np.hstack(np_images)
+        np_images = transformed_images
 
         plt.subplot(3, 2, i)
         title = f"Label: {str(emnist_labels)} Pred: {str(pred)}"
@@ -81,13 +83,16 @@ def predict(val_root, pretrained, save_dir):
         plt.title(title)
         plt.imshow(np_images, cmap='gray')
         plt.axis('off')
+
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
     plt.savefig(os.path.join(save_dir, "predict_emnist.jpg"))
 
 
 def main():
     args = parse_opt()
 
-    predict(args.val_root, args.pretrained, args.save_dir)
+    predict(args, args.val_root, args.pretrained, args.save_dir)
 
 
 if __name__ == '__main__':
