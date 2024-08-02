@@ -5,6 +5,30 @@
 @File    : ccpd2plate.py
 @Author  : zj
 @Description:
+
+Download the CCPD2019 and CCPD2020 datasets and store them in the following format:
+
+```text
+.
+├── CCPD2019
+│   ├── ccpd_base
+│   ├── ccpd_blur
+│   ├── ccpd_challenge
+│   ├── ccpd_db
+│   ├── ccpd_fn
+│   ├── ccpd_np
+│   ├── ccpd_rotate
+│   ├── ccpd_tilt
+│   ├── ccpd_weather
+│   ├── LICENSE
+│   ├── README.md
+│   └── splits
+├── CCPD2020
+│   └── ccpd_green
+```
+
+Crop the license plate area of each image and use the license plate name as the file name.
+
 """
 
 import sys
