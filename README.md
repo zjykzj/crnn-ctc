@@ -51,57 +51,59 @@ pip install -r requirements.txt
 
 ```shell
 # EMNIST
-$ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_emist.py --device 0,1,2,3 ../datasets/EMNIST/ runs/emnist_ddp/
+$ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn_gru-emnist-b512/ --batch-size 512 --device 0 --use-gru
 # Plate
-$ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_plate.py --device 0,1,2,3 ../datasets/git_plate/CCPD_CRPD_OTHER_ALL/ ../datasets/git_plate/val_verify/ runs/plate_ddp/
+$ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_gru-plate-b256/ --batch-size 256 --device 0 --use-gru
 ```
 
 ### Eval
 
 ```shell
 # EMNIST
-$ python eval_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/EMNIST/
-args: Namespace(pretrained='runs/emnist_ddp/crnn-emnist-e100.pth', val_root='../datasets/EMNIST/')
-Loading CRNN pretrained: runs/emnist_ddp/crnn-emnist-e100.pth
-Batch:62 ACC:100.000: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:02<00:00, 30.82it/s]
-ACC:95.100
+$ python3 eval_emnist.py ./runs/crnn_gru-emnist-b512/crnn_gru-emnist-b512-e100.pth ../datasets/emnist/ --use-gru
+args: Namespace(pretrained='./runs/crnn_gru-emnist-b512/crnn_gru-emnist-b512-e100.pth', use_gru=True, val_root='../datasets/emnist/')
+Loading CRNN pretrained: ./runs/crnn_gru-emnist-b512/crnn_gru-emnist-b512-e100.pth
+Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:38<00:00, 40.34it/s]
+ACC:98.432
 # Plate
-$ python eval_plate.py runs/plate_ddp/crnn-plate-e100.pth ../datasets/git_plate/val_verify/
-args: Namespace(pretrained='runs/plate_ddp/crnn-plate-e100.pth', val_root='../datasets/git_plate/val_verify/')
-Loading CRNN pretrained: runs/plate_ddp/crnn-plate-e100.pth
-Load test data: 2014
-Batch:62 ACC:96.667: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 63/63 [00:02<00:00, 22.51it/s]
-ACC:97.319
+$ CUDA_VISIBLE_DEVICES=1 python3 eval_plate.py ./runs/crnn_gru-plate-b256-e100.pth ../datasets/chinese_license_plate/recog/ --use-gru
+args: Namespace(only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='./runs/crnn_gru-plate-b256-e100.pth', use_gru=True, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: ./runs/crnn_gru-plate-b256-e100.pth
+Load test data: 149002
+Batch:4656 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4657/4657 [07:27<00:00, 10.41it/s]
+ACC:75.649
 ```
 
 ### Predict
 
 ```shell
-$ python predict_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/EMNIST/ runs/
-args: Namespace(pretrained='runs/emnist_ddp/crnn-emnist-e100.pth', save_dir='runs/', val_root='../datasets/EMNIST/')
-Loading CRNN pretrained: runs/emnist_ddp/crnn-emnist-e100.pth
-Label: [6 5 3 8 6] Pred: [6 5 3 8 6]
-Label: [2 1 4 3 0] Pred: [2 1 4 3 0]
-Label: [8 5 3 3 5] Pred: [8 5 3 3 5]
-Label: [0 7 9 4 9] Pred: [0 7 9 4 9]
-Label: [6 1 7 2 0] Pred: [6 1 7 2 0]
-Label: [8 8 9 9 5] Pred: [8 8 9 9 5]
+$ python3 predict_emnist.py runs/crnn_gru-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/ --use-gru
+args: Namespace(pretrained='runs/crnn_gru-emnist-b512-e100.pth', save_dir='./runs/predict/emnist/', use_gru=True, val_root='../datasets/emnist/')
+Loading CRNN pretrained: runs/crnn_gru-emnist-b512-e100.pth
+Label: [3 8 6 3 1] Pred: [3 8 6 3 1]
+Label: [7 7 3 8 5] Pred: [7 7 3 8 5]
+Label: [6 3 4 9 7] Pred: [6 3 4 9 7]
+Label: [5 1 4 9 5] Pred: [5 1 4 9 5]
+Label: [6 8 4 1 9] Pred: [6 8 4 1 9]
+Label: [9 1 7 3 7] Pred: [9 1 7 3 7]
 ```
 
-![](assets/predict_emnist.jpg)
+![](assets/predict/emnist/predict_emnist.jpg)
 
 ```shell
-$ python predict_plate.py runs/plate_ddp/crnn-plate-e100.pth ./assets/plate/宁A87J92_0.jpg runs/
-args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', pretrained='runs/plate_ddp/crnn-plate-e100.pth', save_dir='runs/')
-Loading CRNN pretrained: runs/plate_ddp/crnn-plate-e100.pth
-Pred: 宁A87J92
-$ python predict_plate.py runs/plate_ddp/crnn-plate-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/
-args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', pretrained='runs/plate_ddp/crnn-plate-e100.pth', save_dir='runs/')
-Loading CRNN pretrained: runs/plate_ddp/crnn-plate-e100.pth
-Pred: 川A3X7J1
+$ python predict_plate.py runs/crnn_gru-plate-b256-e100.pth ./assets/plate/宁A87J92_0.jpg ./runs/predict/plate/ --use-gru
+args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', pretrained='runs/crnn_gru-plate-b256-e100.pth', save_dir='./runs/predict/plate/', use_gru=True)
+Loading CRNN pretrained: runs/crnn_gru-plate-b256-e100.pth
+Pred: 宁A·87J92
+Save to ./runs/predict/plate/plate_宁A87J92_0.jpg
+$ python predict_plate.py runs/crnn_gru-plate-b256-e100.pth ./assets/plate/川A3X7J1_0.jpg ./runs/predict/plate/ --use-gru
+args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', pretrained='runs/crnn_gru-plate-b256-e100.pth', save_dir='./runs/predict/plate/', use_gru=True)
+Loading CRNN pretrained: runs/crnn_gru-plate-b256-e100.pth
+Pred: 川A·3X7J1
+Save to ./runs/predict/plate/plate_川A3X7J1_0.jpg
 ```
 
-<p align="left"><img src="assets/plate_宁A87J92_0.jpg" height="240"\>  <img src="assets/plate_川A3X7J1_0.jpg" height="240"\></p>
+<p align="left"><img src="assets/predict/plate/plate_宁A87J92_0.jpg" height="240"\>  <img src="assets/predict/plate/plate_川A3X7J1_0.jpg" height="240"\></p>
 
 ## Maintainers
 
