@@ -7,8 +7,8 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_lstm-plate-b256/ --batch-size 256 --device 0
-    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_gru-plate-b256/ --batch-size 256 --device 0 --use-gru
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_tiny-plate-b512/ --batch-size 512 --device 0
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b256/ --batch-size 256 --device 0 --not-tiny
 
 """
 
@@ -43,7 +43,8 @@ def parse_opt():
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
     parser.add_argument('--batch-size', type=int, default=256, help='total batch size for all GPUs, -1 for autobatch')
-    parser.add_argument('--use-gru', action='store_true', help='use nn.GRU instead of nn.LSTM')
+    parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
+    parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -64,12 +65,16 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
 
 
 def train(opt, device):
-    data_root, batch_size, use_gru, output = opt.data, opt.batch_size, opt.use_gru, opt.output
+    data_root, batch_size, not_tiny, use_lstm, output = opt.data, opt.batch_size, opt.not_tiny, opt.use_lstm, opt.output
     if RANK in {-1, 0} and not os.path.exists(output):
         os.makedirs(output)
 
+    # (W, H)
+    input_shape = (168, 48)
+
     LOGGER.info("=> Create Model")
-    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=2, use_gru=use_gru).to(device)
+    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_input_height=input_shape[1], is_tiny=not not_tiny,
+                 use_gru=not use_lstm).to(device)
     blank_label = 0
     criterion = CTCLoss(blank_label=blank_label).to(device)
 
@@ -80,7 +85,7 @@ def train(opt, device):
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 70, 90])
 
     LOGGER.info("=> Load data")
-    train_dataset = PlateDataset(data_root, is_train=True, img_w=168, img_h=48)
+    train_dataset = PlateDataset(data_root, is_train=True, input_shape=input_shape)
     sampler = None if LOCAL_RANK == -1 else distributed.DistributedSampler(train_dataset, shuffle=True)
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=batch_size,
@@ -90,7 +95,7 @@ def train(opt, device):
                                   drop_last=True,
                                   pin_memory=True)
     if RANK in {-1, 0}:
-        val_dataset = PlateDataset(data_root, is_train=False, img_w=168, img_h=48)
+        val_dataset = PlateDataset(data_root, is_train=False, input_shape=input_shape)
         val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, drop_last=False,
                                     pin_memory=True)
 
@@ -100,7 +105,7 @@ def train(opt, device):
     LOGGER.info("=> Start training")
     t0 = time.time()
     amp = True
-    # scaler = torch.cuda.amp.GradScaler(enabled=amp)
+    scaler = torch.cuda.amp.GradScaler(enabled=amp)
 
     # DDP mode
     cuda = device.type != 'cpu'
@@ -123,23 +128,20 @@ def train(opt, device):
         for idx, (images, targets) in enumerate(pbar):
             batch_size = len(images)
 
-            # targets = targets.to(device)
             targets = train_dataset.convert(targets)
-            target_lengths = torch.IntTensor([len(t) for t in targets])
-            targets = torch.concat(targets)
+            target_lengths = torch.IntTensor([len(t) for t in targets]).to(device)
+            targets = torch.concat(targets).to(device)
 
-            # with torch.cuda.amp.autocast(amp):
-            outputs = model(images.to(device)).cpu()
-            loss = criterion(outputs, targets, target_lengths)
-            # scaler.scale(loss).backward()
-            loss.backward()
+            with torch.cuda.amp.autocast(amp):
+                outputs = model(images.to(device))
+                loss = criterion(outputs, targets, target_lengths)
+            scaler.scale(loss).backward()
 
             if epoch <= warmup_epoch:
                 adjust_learning_rate(learn_rate, warmup_epoch, optimizer, epoch - 1, idx, len(train_dataloader))
 
-            # scaler.step(optimizer)  # optimizer.step
-            # scaler.update()
-            optimizer.step()
+            scaler.step(optimizer)  # optimizer.step
+            scaler.update()
             optimizer.zero_grad()
 
             if RANK in {-1, 0}:
@@ -149,10 +151,10 @@ def train(opt, device):
 
         if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
-            if use_gru:
-                save_path = os.path.join(output, f"crnn_gru-plate-b{batch_size}-e{epoch}.pth")
+            if not_tiny:
+                save_path = os.path.join(output, f"crnn-plate-b{batch_size}-e{epoch}.pth")
             else:
-                save_path = os.path.join(output, f"crnn_lstm-plate-b{batch_size}-e{epoch}.pth")
+                save_path = os.path.join(output, f"crnn_tiny-plate-b{batch_size}-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 
