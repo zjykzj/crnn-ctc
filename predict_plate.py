@@ -77,7 +77,7 @@ def load_crnn(pretrained=None, device=None, img_h=48, not_tiny=False, use_lstm=F
 
 
 @torch.no_grad()
-def predict(image, model=None, device=None):
+def predict_crnn(image, model=None, device=None):
     # Data
     img_w = 168
     img_h = 48
@@ -119,7 +119,7 @@ def main():
     model, device = load_crnn(pretrained=args.pretrained, img_h=48, not_tiny=args.not_tiny, use_lstm=args.use_lstm)
 
     # Predict
-    pred_plate = predict(image=image, model=model, device=device)
+    pred_plate = predict_crnn(image=image, model=model, device=device)
 
     # Draw
     plt.figure()
