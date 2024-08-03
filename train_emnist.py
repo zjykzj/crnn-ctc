@@ -7,8 +7,8 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn_lstm-emnist-b512/ --batch-size 512 --device 0
-    $ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn_gru-emnist-b512/ --batch-size 512 --device 0 --use-gru
+    $ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn_tiny-emnist-b512/ --batch-size 512 --device 0
+    $ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn-emnist-b512/ --batch-size 512 --device 0 --not-tiny
 
 """
 
@@ -43,8 +43,8 @@ def parse_opt():
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
     parser.add_argument('--batch-size', type=int, default=512, help='total batch size for all GPUs, -1 for autobatch')
-
-    parser.add_argument('--use-gru', action='store_true', help='use nn.GRU instead of nn.LSTM')
+    parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
+    parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -65,12 +65,18 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
 
 
 def train(opt, device):
-    data_root, batch_size, output, use_gru = opt.data, opt.batch_size, opt.output, opt.use_gru
+    data_root, batch_size, not_tiny, use_lstm, output = opt.data, opt.batch_size, opt.not_tiny, opt.use_lstm, opt.output
     if RANK in {-1, 0} and not os.path.exists(output):
         os.makedirs(output)
 
+    img_h = 32
+    digits_per_sequence = 5
+    # (W, H)
+    input_shape = (digits_per_sequence * 5, img_h)
+
     LOGGER.info("=> Create Model")
-    model = CRNN(in_channel=1, num_classes=len(DIGITS_CHARS), cnn_output_height=1, use_gru=use_gru).to(device)
+    model = CRNN(in_channel=1, num_classes=len(DIGITS_CHARS), cnn_input_height=input_shape[1], is_tiny=not not_tiny,
+                 use_gru=not use_lstm).to(device)
     blank_label = len(DIGITS_CHARS) - 1
     criterion = CTCLoss(blank_label=blank_label).to(device)
 
@@ -81,8 +87,6 @@ def train(opt, device):
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 70, 90])
 
     LOGGER.info("=> Load data")
-    img_h = 32
-    digits_per_sequence = 5
     train_dataset = EMNISTDataset(data_root, is_train=True, num_of_sequences=100000,
                                   digits_per_sequence=digits_per_sequence, img_h=img_h)
     sampler = None if LOCAL_RANK == -1 else distributed.DistributedSampler(train_dataset, shuffle=True)
@@ -148,10 +152,10 @@ def train(opt, device):
 
         if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
-            if use_gru:
-                save_path = os.path.join(output, f"crnn_gru-emnist-b{batch_size}-e{epoch}.pth")
+            if not_tiny:
+                save_path = os.path.join(output, f"crnn-emnist-b{batch_size}-e{epoch}.pth")
             else:
-                save_path = os.path.join(output, f"crnn_lstm-emnist-b{batch_size}-e{epoch}.pth")
+                save_path = os.path.join(output, f"crnn_timy-emnist-b{batch_size}-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 
