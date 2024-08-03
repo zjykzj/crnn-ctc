@@ -42,8 +42,11 @@
 
 ## Latest News
 
-* ***[2023/10/11][v0.2.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.2.0). Support training/evaluation/prediction of CRNN+CTC based on license plate.***
-* ***[2023/10/10][v0.1.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.1.0). Support training/evaluation/prediction of CRNN+CTC based on EMNIST digital characters.***
+| Version                                                          | Release Date | Major Updates                                                                          |
+|------------------------------------------------------------------|--------------|----------------------------------------------------------------------------------------|
+| [v0.3.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.3.0) | 2024/08/03   | Implement models CRNN_LSTM and CRNN_GRU on datasets EMNIST and ChineseLicensePlate.    |
+| [v0.2.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.2.0) | 2023/10/11   | Support training/evaluation/prediction of CRNN+CTC based on license plate.             |
+| [v0.1.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.1.0) | 2023/10/10   | Support training/evaluation/prediction of CRNN+CTC based on EMNIST digital characters. |
 
 ## Background
 
