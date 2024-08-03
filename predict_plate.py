@@ -7,8 +7,8 @@
 @description:
 
 Usage: Predict Plate:
-    $ python predict_plate.py ./runs/crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/
-    $ python predict_plate.py ./runs/crnn-plate-b512-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/ --not-tiny
+    $ python predict_plate.py ./runs/crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
+    $ python predict_plate.py ./runs/crnn-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
 
 """
 
