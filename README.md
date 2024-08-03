@@ -59,6 +59,8 @@ pip install -r requirements.txt
 
 ### Train
 
+* ChineseLicensePlate: [Baidu Drive](https://pan.baidu.com/s/1fQh0E9c6Z4satvrEthKevg)(ad7l)
+
 ```shell
 # EMNIST
 $ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn_gru-emnist-b512/ --batch-size 512 --device 0 --use-gru
