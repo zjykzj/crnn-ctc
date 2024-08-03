@@ -76,12 +76,11 @@ def create_plate_label(img_list):
 
 class PlateDataset(Dataset):
 
-    def __init__(self, data_root, is_train=True, img_h=48, img_w=168,
+    def __init__(self, data_root, is_train=True, input_shape=(160, 48),
                  only_ccpd2019=False, only_ccpd2020=False, only_others=False):
         self.data_root = data_root
         self.is_train = is_train
-        self.img_w = img_w
-        self.img_h = img_h
+        self.input_shape = input_shape
 
         if is_train:
             if only_ccpd2019:
@@ -160,7 +159,7 @@ class PlateDataset(Dataset):
         if self.is_train and random.random() > 0.5:
             image = self.transform(image)
             image = np.array(image, dtype=np.uint8)
-        image = cv2.resize(image, (self.img_w, self.img_h))
+        image = cv2.resize(image, self.input_shape)
 
         data = torch.from_numpy(image).float() / 255.
         # HWC -> CHW
