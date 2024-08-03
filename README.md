@@ -15,20 +15,20 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
-| **Model** | **ARCH**  | **Model Size (MB)** | **EMNIST Accuracy (%)** | **Training Data** | **Testing Data** |
-|:---------:|:---------:|:-------------------:|:-----------------------:|:-----------------:|:----------------:|
-| **CRNN**  | CONV+LSTM |         34          |         98.432          |      100,000      |      5,000       |
-| **CRNN**  | CONV+GRU  |         31          |         98.386          |      100,000      |      5,000       |
+|   **Model**   | **ARCH** | **Model Size (MB)** | **EMNIST Accuracy (%)** | **Training Data** | **Testing Data** |
+|:-------------:|:--------:|:-------------------:|:-----------------------:|:-----------------:|:----------------:|
+|   **CRNN**    | CONV+GRU |         31          |         98.546          |      100,000      |      5,000       |
+| **CRNN_Tiny** | CONV+GRU |         1.7         |         98.396          |      100,000      |      5,000       |
 
-| **Model** | **ARCH**  | **Model Size (MB)** | **ChineseLicensePlate Accuracy (%)** | **Training Data** | **Testing Data** |
-|:---------:|:---------:|:-------------------:|:------------------------------------:|:-----------------:|:----------------:|
-| **CRNN**  | CONV+LSTM |         70          |                74.252                |      269,621      |     149,002      |
-| **CRNN**  | CONV+GRU  |         58          |                75.649                |      269,621      |     149,002      |
+|   **Model**   | **ARCH** | **Model Size (MB)** | **ChineseLicensePlate Accuracy (%)** | **Training Data** | **Testing Data** |
+|:-------------:|:--------:|:-------------------:|:------------------------------------:|:-----------------:|:----------------:|
+|   **CRNN**    | CONV+GRU |         58          |                82.379                |      269,621      |     149,002      |
+| **CRNN_Tiny** | CONV+GRU |          4          |                76.222                |      269,621      |     149,002      |
 
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
-- [Latest News](#latest-news)
+- [News🚀🚀🚀](#news)
 - [Background](#background)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -66,56 +66,56 @@ pip install -r requirements.txt
 
 ```shell
 # EMNIST
-$ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn_gru-emnist-b512/ --batch-size 512 --device 0 --use-gru
+$ python3 train_emnist.py ../datasets/emnist/ ./runs/crnn-emnist-b512/ --batch-size 512 --device 0 --not-tiny
 # Plate
-$ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_gru-plate-b256/ --batch-size 256 --device 0 --use-gru
+$ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b512/ --batch-size 512 --device 0 --not-tiny
 ```
 
 ### Eval
 
 ```shell
 # EMNIST
-$ python3 eval_emnist.py ./runs/crnn_gru-emnist-b512/crnn_gru-emnist-b512-e100.pth ../datasets/emnist/ --use-gru
-args: Namespace(pretrained='./runs/crnn_gru-emnist-b512/crnn_gru-emnist-b512-e100.pth', use_gru=True, val_root='../datasets/emnist/')
-Loading CRNN pretrained: ./runs/crnn_gru-emnist-b512/crnn_gru-emnist-b512-e100.pth
-Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:38<00:00, 40.34it/s]
-ACC:98.432
+$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py runs/crnn-emnist-b512-e100.pth ../datasets/emnist/ --not-tiny
+args: Namespace(not_tiny=True, pretrained='runs/crnn-emnist-b512-e100.pth', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: runs/crnn-emnist-b512-e100.pth
+Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:22<00:00, 69.08it/s]
+ACC:98.546
 # Plate
-$ CUDA_VISIBLE_DEVICES=1 python3 eval_plate.py ./runs/crnn_gru-plate-b256-e100.pth ../datasets/chinese_license_plate/recog/ --use-gru
-args: Namespace(only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='./runs/crnn_gru-plate-b256-e100.pth', use_gru=True, val_root='../datasets/chinese_license_plate/recog/')
-Loading CRNN pretrained: ./runs/crnn_gru-plate-b256-e100.pth
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py ./runs/crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny
+args: Namespace(not_tiny=True, only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='./runs/crnn-plate-b512-e100.pth', use_lstm=False, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: ./runs/crnn-plate-b512-e100.pth
 Load test data: 149002
-Batch:4656 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4657/4657 [07:27<00:00, 10.41it/s]
-ACC:75.649
+Batch:4656 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 4657/4657 [00:56<00:00, 83.05it/s]
+ACC:82.379
 ```
 
 ### Predict
 
 ```shell
-$ python3 predict_emnist.py runs/crnn_gru-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/ --use-gru
-args: Namespace(pretrained='runs/crnn_gru-emnist-b512-e100.pth', save_dir='./runs/predict/emnist/', use_gru=True, val_root='../datasets/emnist/')
-Loading CRNN pretrained: runs/crnn_gru-emnist-b512-e100.pth
-Label: [3 8 6 3 1] Pred: [3 8 6 3 1]
-Label: [7 7 3 8 5] Pred: [7 7 3 8 5]
-Label: [6 3 4 9 7] Pred: [6 3 4 9 7]
-Label: [5 1 4 9 5] Pred: [5 1 4 9 5]
-Label: [6 8 4 1 9] Pred: [6 8 4 1 9]
-Label: [9 1 7 3 7] Pred: [9 1 7 3 7]
+$ CUDA_VISIBLE_DEVICES=0 python predict_emnist.py runs/crnn-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/ --not-tiny
+args: Namespace(not_tiny=True, pretrained='runs/crnn-emnist-b512-e100.pth', save_dir='./runs/predict/emnist/', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: runs/crnn-emnist-b512-e100.pth
+Label: [4 5 9 0 1] Pred: [4 5 9 0 1]
+Label: [5 9 5 6 1] Pred: [5 9 5 6 1]
+Label: [1 6 0 8 3] Pred: [1 6 0 8 3]
+Label: [9 1 7 2 4] Pred: [9 1 7 2 4]
+Label: [2 8 9 6 3] Pred: [2 8 9 6 3]
+Label: [0 6 9 8 2] Pred: [0 6 9 8 2]
 ```
 
 ![](assets/predict/emnist/predict_emnist.jpg)
 
 ```shell
-$ python predict_plate.py runs/crnn_gru-plate-b256-e100.pth ./assets/plate/宁A87J92_0.jpg ./runs/predict/plate/ --use-gru
-args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', pretrained='runs/crnn_gru-plate-b256-e100.pth', save_dir='./runs/predict/plate/', use_gru=True)
-Loading CRNN pretrained: runs/crnn_gru-plate-b256-e100.pth
+$ python predict_plate.py ./runs/crnn-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
+args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=True, pretrained='./runs/crnn-plate-b512-e100.pth', save_dir='runs/predict/plate/', use_lstm=False)
+Loading CRNN pretrained: ./runs/crnn-plate-b512-e100.pth
 Pred: 宁A·87J92
-Save to ./runs/predict/plate/plate_宁A87J92_0.jpg
-$ python predict_plate.py runs/crnn_gru-plate-b256-e100.pth ./assets/plate/川A3X7J1_0.jpg ./runs/predict/plate/ --use-gru
-args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', pretrained='runs/crnn_gru-plate-b256-e100.pth', save_dir='./runs/predict/plate/', use_gru=True)
-Loading CRNN pretrained: runs/crnn_gru-plate-b256-e100.pth
+Save to runs/predict/plate/plate_宁A87J92_0.jpg
+$ python predict_plate.py ./runs/crnn-plate-b512-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/ --not-tiny
+args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=True, pretrained='./runs/crnn-plate-b512-e100.pth', save_dir='runs/predict/plate/', use_lstm=False)
+Loading CRNN pretrained: ./runs/crnn-plate-b512-e100.pth
 Pred: 川A·3X7J1
-Save to ./runs/predict/plate/plate_川A3X7J1_0.jpg
+Save to runs/predict/plate/plate_川A3X7J1_0.jpg
 ```
 
 <p align="left"><img src="assets/predict/plate/plate_宁A87J92_0.jpg" height="240"\>  <img src="assets/predict/plate/plate_川A3X7J1_0.jpg" height="240"\></p>
