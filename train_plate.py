@@ -8,7 +8,7 @@
 
 Usage - Single-GPU training:
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_tiny-plate-b512/ --batch-size 512 --device 0
-    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b256/ --batch-size 256 --device 0 --not-tiny
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b512/ --batch-size 512 --device 0 --not-tiny
 
 """
 
@@ -42,7 +42,7 @@ def parse_opt():
     parser.add_argument('data', metavar='DIR', type=str, help='path to chinese_license_plate dataset')
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
-    parser.add_argument('--batch-size', type=int, default=256, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--batch-size', type=int, default=512, help='total batch size for all GPUs, -1 for autobatch')
     parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
     parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
 
