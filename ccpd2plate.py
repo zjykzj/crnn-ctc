@@ -6,7 +6,7 @@
 @Author  : zj
 @Description:
 
-Download the CCPD2019 and CCPD2020 datasets and store them in the following format:
+Download the CCPD2019 and CCPD2020 datasets from https://github.com/detectRecog/CCPD and store them in the following format:
 
 ```text
 .
