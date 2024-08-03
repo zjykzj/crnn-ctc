@@ -22,11 +22,14 @@ class CTCLoss(nn.Module):
         # [N, W, num_classes] -> [W, N, num_classes]
         preds = preds.permute(1, 0, 2)
 
-        input_lengths = torch.IntTensor(N).fill_(cnn_output_width)
+        input_lengths = torch.IntTensor(N).fill_(cnn_output_width).to(preds.device)
         if target_lengths is None:
             # Padded
-            target_lengths = torch.IntTensor([len(t) for t in targets])
+            target_lengths = torch.IntTensor([len(t) for t in targets]).to(preds.device)
 
-        # print(preds.shape, targets.shape, input_lengths, target_lengths)
-        loss = self.loss(preds, targets, input_lengths, target_lengths)
+        # RuntimeError: Expected tensor to have CPU Backend, but got tensor with CUDA Backend (while checking arguments for cudnn_ctc_loss)
+        # https://github.com/pytorch/pytorch/issues/22234
+        with torch.backends.cudnn.flags(enabled=False):
+            # print(preds.shape, targets.shape, input_lengths, target_lengths)
+            loss = self.loss(preds, targets, input_lengths, target_lengths)
         return loss
