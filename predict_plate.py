@@ -7,18 +7,18 @@
 @description:
 
 Usage: Predict Plate:
-    $ python predict_plate.py runs/plate_ddp/crnn-plate-e100.pth ./assets/plate/宁A87J92_0.jpg runs/
-    $ python predict_plate.py runs/plate_ddp/crnn-plate-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/
+    $ python predict_plate.py ./runs/crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/
+    $ python predict_plate.py ./runs/crnn-plate-b512-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/ --not-tiny
 
 """
 
-import argparse
 import os
+import argparse
 from itertools import groupby
 
 import cv2
 import matplotlib.pyplot as plt
-import numpy as np
+
 import torch
 
 # cp assets/fonts/simhei.ttf /usr/share/fonts/truetype/noto/
@@ -49,15 +49,17 @@ def parse_opt():
     parser.add_argument('image_path', metavar='IMAGE', type=str, help='path to image path')
     parser.add_argument('save_dir', metavar='DST', type=str, help='path to save dir')
 
-    parser.add_argument('--use-gru', action='store_true', help='use nn.GRU instead of nn.LSTM')
+    parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
+    parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
 
     args = parser.parse_args()
     print(f"args: {args}")
     return args
 
 
-def load_model(pretrained=None, device=None, use_gru=False):
-    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_output_height=2, use_gru=use_gru)
+def load_crnn(pretrained=None, device=None, img_h=48, not_tiny=False, use_lstm=False):
+    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_input_height=img_h, is_tiny=not not_tiny,
+                 use_gru=not use_lstm)
     if pretrained is not None:
         if isinstance(pretrained, list):
             pretrained = pretrained[0]
@@ -114,7 +116,7 @@ def main():
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
 
     # Model
-    model, device = load_model(pretrained=args.pretrained, use_gru=args.use_gru)
+    model, device = load_crnn(pretrained=args.pretrained, img_h=48, not_tiny=args.not_tiny, use_lstm=args.use_lstm)
 
     # Predict
     pred_plate = predict(image=image, model=model, device=device)

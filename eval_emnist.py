@@ -7,8 +7,8 @@
 @description:
 
 Usage - Single-GPU eval:
-    $ python eval_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/emnist/
-    $ python eval_emnist.py runs/emnist_ddp/crnn-emnist-e100.pth ../datasets/emnist/ --use-gru
+    $ python eval_emnist.py runs/crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/
+    $ python eval_emnist.py runs/crnn-emnist-b512-e100.pth ../datasets/emnist/ --not-tiny
 
 """
 
@@ -29,7 +29,8 @@ def parse_opt():
     parser.add_argument('pretrained', metavar='PRETRAINED', type=str, help='path to pretrained model')
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to val dataset')
 
-    parser.add_argument('--use-gru', action='store_true', help='use nn.GRU instead of nn.LSTM')
+    parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
+    parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
 
     args = parser.parse_args()
     print(f"args: {args}")
@@ -38,7 +39,13 @@ def parse_opt():
 
 @torch.no_grad()
 def val(args, val_root, pretrained):
-    model = CRNN(in_channel=1, num_classes=len(DIGITS_CHARS), cnn_output_height=1, use_gru=args.use_gru)
+    img_h = 32
+    digits_per_sequence = 5
+    # (W, H)
+    input_shape = (digits_per_sequence * 5, img_h)
+
+    model = CRNN(in_channel=1, num_classes=len(DIGITS_CHARS), cnn_input_height=input_shape[1],
+                 is_tiny=not args.not_tiny, use_gru=not args.use_lstm)
     print(f"Loading CRNN pretrained: {pretrained}")
     ckpt = torch.load(pretrained, map_location='cpu')
     ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
@@ -48,8 +55,6 @@ def val(args, val_root, pretrained):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
-    img_h = 32
-    digits_per_sequence = 5
     val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=50000,
                                 digits_per_sequence=digits_per_sequence, img_h=img_h)
     val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4, drop_last=False,
