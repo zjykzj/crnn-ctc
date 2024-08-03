@@ -155,7 +155,7 @@ def train(opt, device):
             if not_tiny:
                 save_path = os.path.join(output, f"crnn-emnist-b{batch_size}-e{epoch}.pth")
             else:
-                save_path = os.path.join(output, f"crnn_timy-emnist-b{batch_size}-e{epoch}.pth")
+                save_path = os.path.join(output, f"crnn_tiny-emnist-b{batch_size}-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 
