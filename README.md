@@ -15,6 +15,16 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
+| **Model** | **ARCH**  | **Model Size (MB)** | **EMNIST Accuracy (%)** | **Training Data** | **Testing Data** |
+|:---------:|:---------:|:-------------------:|:-----------------------:|:-----------------:|:----------------:|
+| **CRNN**  | CONV+LSTM |         34          |         98.432          |      100,000      |      5,000       |
+| **CRNN**  | CONV+GRU  |         31          |         98.386          |      100,000      |      5,000       |
+
+| **Model** | **ARCH**  | **Model Size (MB)** | **ChineseLicensePlate Accuracy (%)** | **Training Data** | **Testing Data** |
+|:---------:|:---------:|:-------------------:|:------------------------------------:|:-----------------:|:----------------:|
+| **CRNN**  | CONV+LSTM |         70          |                74.252                |      269,621      |     149,002      |
+| **CRNN**  | CONV+GRU  |         58          |                75.649                |      269,621      |     149,002      |
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
