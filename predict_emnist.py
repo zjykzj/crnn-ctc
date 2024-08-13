@@ -7,8 +7,8 @@
 @description:
 
 Usage: Predict EMNIST:
-    $ python predict_emnist.py runs/crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/
-    $ python predict_emnist.py runs/crnn-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/ --not-tiny
+    $ python predict_emnist.py crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/
+    $ python predict_emnist.py crnn-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/ --not-tiny
 
 """
 
@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 import torch
 
-from utils.model.crnn import CRNN
+from utils.general import load_crnn
 from utils.dataset.emnist import EMNISTDataset, DIGITS_CHARS
 
 
@@ -43,19 +43,9 @@ def parse_opt():
 def predict(args, val_root, pretrained, save_dir):
     img_h = 32
     digits_per_sequence = 5
-    # (W, H)
-    input_shape = (digits_per_sequence * 5, img_h)
 
-    model = CRNN(in_channel=1, num_classes=len(DIGITS_CHARS), cnn_input_height=input_shape[1],
-                 is_tiny=not args.not_tiny, use_gru=not args.use_lstm)
-    print(f"Loading CRNN pretrained: {pretrained}")
-    ckpt = torch.load(pretrained, map_location='cpu')
-    ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
-    model.load_state_dict(ckpt, strict=True)
-    model.eval()
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
+    model, device = load_crnn(pretrained=pretrained, shape=(1, 1, img_h, digits_per_sequence * img_h),
+                              num_classes=len(DIGITS_CHARS), not_tiny=args.not_tiny, use_lstm=args.use_lstm)
 
     val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=50000,
                                 digits_per_sequence=digits_per_sequence, img_h=img_h)

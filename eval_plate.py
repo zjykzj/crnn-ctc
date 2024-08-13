@@ -7,13 +7,13 @@
 @description:
 
 Usage - Single-GPU eval:
-    $ python3 eval_plate.py ./runs/crnn_tiny-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/
-    $ python3 eval_plate.py ./runs/crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny
+    $ python3 eval_plate.py crnn_tiny-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/
+    $ python3 eval_plate.py crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny
 
 Usage - Specify which dataset to evaluate:
-    $ python3 eval_plate.py ./runs/crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2019
-    $ python3 eval_plate.py ./runs/crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2020
-    $ python3 eval_plate.py ./runs/crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-others
+    $ python3 eval_plate.py crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2019
+    $ python3 eval_plate.py crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2020
+    $ python3 eval_plate.py crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-others
 
 """
 
@@ -24,7 +24,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from utils.model.crnn import CRNN
+from utils.general import load_crnn
 from utils.dataset.plate import PlateDataset, PLATE_CHARS
 from utils.evaluator import Evaluator
 
@@ -51,16 +51,8 @@ def val(args, val_root, pretrained):
     # (W, H)
     input_shape = (168, 48)
 
-    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_input_height=input_shape[1], is_tiny=not args.not_tiny,
-                 use_gru=not args.use_lstm)
-    print(f"Loading CRNN pretrained: {pretrained}")
-    ckpt = torch.load(pretrained, map_location='cpu')
-    ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
-    model.load_state_dict(ckpt, strict=True)
-    model.eval()
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
+    model, device = load_crnn(pretrained=pretrained, shape=(1, 3, 48, 168), num_classes=len(PLATE_CHARS),
+                              not_tiny=args.not_tiny, use_lstm=args.use_lstm)
 
     val_dataset = PlateDataset(val_root, is_train=False, input_shape=input_shape, only_ccpd2019=args.only_ccpd2019,
                                only_ccpd2020=args.only_ccpd2020, only_others=args.only_others)

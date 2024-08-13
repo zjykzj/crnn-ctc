@@ -7,8 +7,8 @@
 @description:
 
 Usage - Single-GPU eval:
-    $ python eval_emnist.py runs/crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/
-    $ python eval_emnist.py runs/crnn-emnist-b512-e100.pth ../datasets/emnist/ --not-tiny
+    $ python eval_emnist.py crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/
+    $ python eval_emnist.py crnn-emnist-b512-e100.pth ../datasets/emnist/ --not-tiny
 
 """
 
@@ -19,7 +19,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from utils.model.crnn import CRNN
+from utils.general import load_crnn
 from utils.dataset.emnist import EMNISTDataset, DIGITS_CHARS
 from utils.evaluator import Evaluator
 
@@ -41,23 +41,14 @@ def parse_opt():
 def val(args, val_root, pretrained):
     img_h = 32
     digits_per_sequence = 5
-    # (W, H)
-    input_shape = (digits_per_sequence * 5, img_h)
 
-    model = CRNN(in_channel=1, num_classes=len(DIGITS_CHARS), cnn_input_height=input_shape[1],
-                 is_tiny=not args.not_tiny, use_gru=not args.use_lstm)
-    print(f"Loading CRNN pretrained: {pretrained}")
-    ckpt = torch.load(pretrained, map_location='cpu')
-    ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
-    model.load_state_dict(ckpt, strict=True)
-    model.eval()
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
+    model, device = load_crnn(pretrained=pretrained, shape=(1, 1, img_h, digits_per_sequence * img_h),
+                              num_classes=len(DIGITS_CHARS), not_tiny=args.not_tiny, use_lstm=args.use_lstm)
 
     val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=50000,
                                 digits_per_sequence=digits_per_sequence, img_h=img_h)
-    val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4, drop_last=False,
+    batch_size = 1
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, drop_last=False,
                                 pin_memory=True)
 
     blank_label = len(DIGITS_CHARS) - 1

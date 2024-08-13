@@ -7,13 +7,14 @@
 @description:
 
 Usage: Predict Plate:
-    $ python predict_plate.py ./runs/crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
-    $ python predict_plate.py ./runs/crnn-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
+    $ python predict_plate.py crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
+    $ python predict_plate.py crnn-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
 
 """
 
 import os
 import argparse
+import time
 from itertools import groupby
 
 import cv2
@@ -33,14 +34,20 @@ if __name__ == '__main__':
     # 直接运行时，使用绝对导入
     CRNN = importlib.import_module('utils.model.crnn').CRNN
     PLATE_CHARS = importlib.import_module('utils.dataset.plate').PLATE_CHARS
+    model_info = importlib.import_module('utils.general').model_info
+    load_crnn = importlib.import_module('utils.general').load_crnn
 else:
     # 被导入时，尝试使用相对导入，如果失败则回退到绝对导入
     try:
         CRNN = importlib.import_module('.utils.model.crnn', package=__package__).CRNN
         PLATE_CHARS = importlib.import_module('.utils.dataset.plate', package=__package__).PLATE_CHARS
+        model_info = importlib.import_module('.utils.general', package=__package__).model_info
+        load_crnn = importlib.import_module('.utils.general', package=__package__).load_crnn
     except ValueError:
         CRNN = importlib.import_module('utils.model.crnn').CRNN
         PLATE_CHARS = importlib.import_module('utils.dataset.plate').PLATE_CHARS
+        model_info = importlib.import_module('.utils.general').model_info
+        load_crnn = importlib.import_module('.utils.general').load_crnn
 
 
 def parse_opt():
@@ -57,27 +64,10 @@ def parse_opt():
     return args
 
 
-def load_crnn(pretrained=None, device=None, img_h=48, not_tiny=False, use_lstm=False):
-    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_input_height=img_h, is_tiny=not not_tiny,
-                 use_gru=not use_lstm)
-    if pretrained is not None:
-        if isinstance(pretrained, list):
-            pretrained = pretrained[0]
-        print(f"Loading CRNN pretrained: {pretrained}")
-        ckpt = torch.load(pretrained, map_location='cpu')
-        ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
-        model.load_state_dict(ckpt, strict=True)
-    model.eval()
-
-    if device is None:
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = model.to(device)
-
-    return model, device
-
-
 @torch.no_grad()
 def predict_crnn(image, model=None, device=None):
+    start_time = time.time()
+
     # Data
     img_w = 168
     img_h = 48
@@ -103,7 +93,10 @@ def predict_crnn(image, model=None, device=None):
     # pred_plate = ''.join(pred_plate)
     pred_plate = ''.join(pred_plate[:2]) + "·" + ''.join(pred_plate[2:])
 
-    return pred_plate
+    end_time = time.time()
+    predict_time = (end_time - start_time) * 1000
+    print(f"Pred: {pred_plate} - Predict time: {predict_time :.1f} ms")
+    return pred_plate, predict_time
 
 
 def main():
@@ -116,15 +109,15 @@ def main():
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
 
     # Model
-    model, device = load_crnn(pretrained=args.pretrained, img_h=48, not_tiny=args.not_tiny, use_lstm=args.use_lstm)
+    model, device = load_crnn(pretrained=args.pretrained, shape=(1, 3, 48, 168), num_classes=len(PLATE_CHARS),
+                              not_tiny=args.not_tiny, use_lstm=args.use_lstm)
 
     # Predict
-    pred_plate = predict_crnn(image=image, model=model, device=device)
+    pred_plate, _ = predict_crnn(image=image, model=model, device=device)
 
     # Draw
     plt.figure()
     title = f"Pred: {pred_plate}"
-    print(title)
 
     plt.title(title)
     plt.imshow(image)
