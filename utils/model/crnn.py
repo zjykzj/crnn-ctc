@@ -103,6 +103,12 @@ class CRNN(nn.Module):
         # [N, C, H, W] -> [N, W, C*H]
         x = x.view(x.size(0), x.size(1), -1)
 
+        # PROBLEM: torch/nn/modules/rnn.py:821: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at  /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:915.)
+        # FIX:
+        # 1. https://discuss.pytorch.org/t/rnn-module-weights-are-not-part-of-single-contiguous-chunk-of-memory/6011/20
+        # 2. https://pytorch.org/docs/stable/generated/torch.nn.RNNBase.html#torch.nn.RNNBase.flatten_parameters
+        self.rnn.flatten_parameters()
+
         # RNN 层
         x, _ = self.rnn(x)
 
