@@ -46,6 +46,37 @@ ACC:82.384
 
 ### CRNN_Tiny
 
+```shell
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py crnn_tiny-plate-b512-e100.pth ../datasets/c
+hinese_license_plate/recog/ --only-ccpd2019
+args: Namespace(not_tiny=False, only_ccpd2019=True, only_ccpd2020=False, only_others=False, pretrained='crnn_tiny-plate-b512-e100.pth', use_lstm=False, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
+crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+Load test data: 141982
+Batch:4436 ACC:70.000: 100%|██████████████████████████████████████████████████████████████████████████| 4437/4437 [01:18<00:00, 56.21it/s]
+ACC:75.357
+```
+
+```shell
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py crnn_tiny-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --only-ccpd2020
+args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=True, only_others=False, pretrained='crnn_tiny-plate-b512-e100.pth', use_lstm=False, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
+crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+Load test data: 5006
+Batch:156 ACC:92.857: 100%|█████████████████████████████████████████████████████████████████████████████| 157/157 [00:03<00:00, 45.02it/s]
+ACC:92.369
+```
+
+```shell
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py crnn_tiny-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --only-others
+args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=False, only_others=True, pretrained='crnn_tiny-plate-b512-e100.pth', use_lstm=False, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
+crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+Load test data: 2014
+Batch:62 ACC:93.333: 100%|████████████████████████████████████████████████████████████████████████████████| 63/63 [00:01<00:00, 33.76it/s]
+ACC:97.120
+```
+
 ### CRNN
 
 ```shell
