@@ -15,15 +15,22 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
-|   **Model**   | **ARCH** | **Model Size (MB)** | **EMNIST Accuracy (%)** | **Training Data** | **Testing Data** |
-|:-------------:|:--------:|:-------------------:|:-----------------------:|:-----------------:|:----------------:|
-|   **CRNN**    | CONV+GRU |         31          |         98.546          |      100,000      |      5,000       |
-| **CRNN_Tiny** | CONV+GRU |         1.7         |         98.396          |      100,000      |      5,000       |
+|   **Model**   | **ARCH** | **Input Shape** | **GFLOPs** | **Model Size (MB)** | **EMNIST Accuracy (%)** | **Training Data** | **Testing Data** |
+|:-------------:|:--------:|:---------------:|:----------:|:-------------------:|:-----------------------:|:-----------------:|:----------------:|
+|   **CRNN**    | CONV+GRU |  (1, 32, 160)   |    2.2     |         31          |         98.718          |      100,000      |      5,000       |
+| **CRNN_Tiny** | CONV+GRU |  (1, 32, 160)   |    0.1     |         1.7         |         98.278          |      100,000      |      5,000       |
 
-|   **Model**   | **ARCH** | **Model Size (MB)** | **ChineseLicensePlate Accuracy (%)** | **Training Data** | **Testing Data** |
-|:-------------:|:--------:|:-------------------:|:------------------------------------:|:-----------------:|:----------------:|
-|   **CRNN**    | CONV+GRU |         58          |                82.379                |      269,621      |     149,002      |
-| **CRNN_Tiny** | CONV+GRU |          4          |                76.222                |      269,621      |     149,002      |
+|   **Model**   | **ARCH** | **Input Shape** | **GFLOPs** | **Model Size (MB)** | **ChineseLicensePlate Accuracy (%)** | **Training Data** | **Testing Data** |
+|:-------------:|:--------:|:---------------:|:----------:|:-------------------:|:------------------------------------:|:-----------------:|:----------------:|
+|   **CRNN**    | CONV+GRU |  (3, 48, 168)   |    4.0     |         58          |                82.384                |      269,621      |     149,002      |
+| **CRNN_Tiny** | CONV+GRU |  (3, 48, 168)   |    0.3     |         4.0         |                76.226                |      269,621      |     149,002      |
+
+For each sub-dataset, the model detection performance is as follows:
+
+|   **Model**   | **CCPD2019-Test Accuracy (%)** | **Testing Data** | **CCPD2020-Test Accuracy (%)** | **Testing Data** |
+|:-------------:|:------------------------------:|:----------------:|:------------------------------:|:----------------:|
+|   **CRNN**    |             81.761             |     141,982      |             93.728             |      5,006       |
+| **CRNN_Tiny** |             75.357             |     141,982      |             92.369             |      5,006       |
 
 ## Table of Contents
 
