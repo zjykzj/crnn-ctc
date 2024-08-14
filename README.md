@@ -25,7 +25,7 @@
 |   **CRNN**    | CONV+GRU |  (3, 48, 168)   |    4.0     |         58          |                82.384                |      269,621      |     149,002      |
 | **CRNN_Tiny** | CONV+GRU |  (3, 48, 168)   |    0.3     |         4.0         |                76.226                |      269,621      |     149,002      |
 
-For each sub-dataset, the model detection performance is as follows:
+For each sub-dataset, the model performance as follows:
 
 |   **Model**   | **CCPD2019-Test Accuracy (%)** | **Testing Data** | **CCPD2020-Test Accuracy (%)** | **Testing Data** |
 |:-------------:|:------------------------------:|:----------------:|:------------------------------:|:----------------:|
@@ -83,46 +83,51 @@ $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-pl
 
 ```shell
 # EMNIST
-$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py runs/crnn-emnist-b512-e100.pth ../datasets/emnist/ --not-tiny
-args: Namespace(not_tiny=True, pretrained='runs/crnn-emnist-b512-e100.pth', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: runs/crnn-emnist-b512-e100.pth
-Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:22<00:00, 69.08it/s]
-ACC:98.546
+$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/
+args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist-b512-e100.pth', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: crnn_tiny-emnist-b512-e100.pth
+crnn_tiny-emnist-b512-e100 summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
+Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:19<00:00, 80.29it/s]
+ACC:98.278
 # Plate
-$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py ./runs/crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny
-args: Namespace(not_tiny=True, only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='./runs/crnn-plate-b512-e100.pth', use_lstm=False, val_root='../datasets/chinese_license_plate/recog/')
-Loading CRNN pretrained: ./runs/crnn-plate-b512-e100.pth
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py crnn_tiny-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/
+args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='crnn_tiny-plate-b512-e100.pth', use_lstm=False, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
+crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
 Load test data: 149002
-Batch:4656 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 4657/4657 [00:56<00:00, 83.05it/s]
-ACC:82.379
+Batch:4656 ACC:90.000: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4657/4657 [01:08<00:00, 67.50it/s]
+ACC:76.226
 ```
 
 ### Predict
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python predict_emnist.py runs/crnn-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/ --not-tiny
-args: Namespace(not_tiny=True, pretrained='runs/crnn-emnist-b512-e100.pth', save_dir='./runs/predict/emnist/', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: runs/crnn-emnist-b512-e100.pth
-Label: [4 5 9 0 1] Pred: [4 5 9 0 1]
-Label: [5 9 5 6 1] Pred: [5 9 5 6 1]
-Label: [1 6 0 8 3] Pred: [1 6 0 8 3]
-Label: [9 1 7 2 4] Pred: [9 1 7 2 4]
-Label: [2 8 9 6 3] Pred: [2 8 9 6 3]
-Label: [0 6 9 8 2] Pred: [0 6 9 8 2]
+$ CUDA_VISIBLE_DEVICES=0 python predict_emnist.py crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/
+args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist-b512-e100.pth', save_dir='./runs/predict/emnist/', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: crnn_tiny-emnist-b512-e100.pth
+crnn_tiny-emnist-b512-e100 summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
+Label: [3 8 5 8 5] Pred: [3 8 5 8 5]
+Label: [4 8 6 8 0] Pred: [4 8 6 8 0]
+Label: [4 6 4 7 0] Pred: [4 6 4 7 0]
+Label: [2 3 5 0 7] Pred: [2 3 5 0 7]
+Label: [4 7 8 4 6] Pred: [4 7 8 4 6]
+Label: [0 1 4 3 6] Pred: [0 1 4 3 6]
 ```
 
 ![](assets/predict/emnist/predict_emnist.jpg)
 
 ```shell
-$ python predict_plate.py ./runs/crnn-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
-args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=True, pretrained='./runs/crnn-plate-b512-e100.pth', save_dir='runs/predict/plate/', use_lstm=False)
-Loading CRNN pretrained: ./runs/crnn-plate-b512-e100.pth
-Pred: 宁A·87J92
+$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
+args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=False, pretrained='crnn_tiny-plate-b512-e100.pth', save_dir='runs/predict/plate/', use_lstm=False)
+Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
+crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+Pred: 宁A·87J92 - Predict time: 8.4 ms
 Save to runs/predict/plate/plate_宁A87J92_0.jpg
-$ python predict_plate.py ./runs/crnn-plate-b512-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/ --not-tiny
-args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=True, pretrained='./runs/crnn-plate-b512-e100.pth', save_dir='runs/predict/plate/', use_lstm=False)
-Loading CRNN pretrained: ./runs/crnn-plate-b512-e100.pth
-Pred: 川A·3X7J1
+$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn_tiny-plate-b512-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/
+args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=False, pretrained='crnn_tiny-plate-b512-e100.pth', save_dir='runs/predict/plate/', use_lstm=False)
+Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
+crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+Pred: 川A·3X7J1 - Predict time: 8.4 ms
 Save to runs/predict/plate/plate_川A3X7J1_0.jpg
 ```
 
