@@ -15,6 +15,8 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
+ONLINE DEMO：[LICENSE PLATE RECOGNITION](https://blog.zjykzj.cn/gradio/plate_recog/)
+
 |   **Model**   | **ARCH** | **Input Shape** | **GFLOPs** | **Model Size (MB)** | **EMNIST Accuracy (%)** | **Training Data** | **Testing Data** |
 |:-------------:|:--------:|:---------------:|:----------:|:-------------------:|:-----------------------:|:-----------------:|:----------------:|
 |   **CRNN**    | CONV+GRU |  (1, 32, 160)   |    2.2     |         31          |         98.718          |      100,000      |      5,000       |
@@ -39,9 +41,9 @@ For each sub-dataset, the model performance as follows:
 - [Background](#background)
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Train](#train)
-  - [Eval](#eval)
-  - [Predict](#predict)
+    - [Train](#train)
+    - [Eval](#eval)
+    - [Predict](#predict)
 - [Maintainers](#maintainers)
 - [Thanks](#thanks)
 - [Contributing](#contributing)
@@ -49,16 +51,17 @@ For each sub-dataset, the model performance as follows:
 
 ## News🚀🚀🚀
 
-| Version                                                          | Release Date | Major Updates                                                                                                                                                 |
-|------------------------------------------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Version                                                          | Release Date | Major Updates                                                                                                                                           |
+|------------------------------------------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [v1.0.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v1.0.0) | 2024/08/04   | Optimize the CRNN architecture while achieving super lightweight **CRNN_Tiny**. <br>In addition, all training scripts support mixed precision training. |
-| [v0.3.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.3.0) | 2024/08/03   | Implement models **CRNN_LSTM** and **CRNN_GRU** on datasets EMNIST and ChineseLicensePlate.                                                                           |
-| [v0.2.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.2.0) | 2023/10/11   | Support training/evaluation/prediction of CRNN+CTC based on license plate.                                                                                    |
-| [v0.1.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.1.0) | 2023/10/10   | Support training/evaluation/prediction of CRNN+CTC based on EMNIST digital characters.                                                                        |
+| [v0.3.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.3.0) | 2024/08/03   | Implement models **CRNN_LSTM** and **CRNN_GRU** on datasets EMNIST and ChineseLicensePlate.                                                             |
+| [v0.2.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.2.0) | 2023/10/11   | Support training/evaluation/prediction of CRNN+CTC based on license plate.                                                                              |
+| [v0.1.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.1.0) | 2023/10/10   | Support training/evaluation/prediction of CRNN+CTC based on EMNIST digital characters.                                                                  |
 
 ## Background
 
-This warehouse aims to better understand and apply CRNN+CTC, and currently achieves digital recognition and license plate recognition
+This warehouse aims to better understand and apply CRNN+CTC, and currently achieves digital recognition and license
+plate recognition
 
 ## Installation
 
