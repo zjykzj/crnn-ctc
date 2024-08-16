@@ -53,6 +53,7 @@ For each sub-dataset, the model performance as follows:
 
 | Version                                                          | Release Date | Major Updates                                                                                                                                           |
 |------------------------------------------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [v1.1.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v1.1.0) | 2024/08/17   | Update EVAL/PREDICT implementation, support Pytorch format model conversion to ONNX, and finally provide online demo based on Gradio.                   |
 | [v1.0.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v1.0.0) | 2024/08/04   | Optimize the CRNN architecture while achieving super lightweight **CRNN_Tiny**. <br>In addition, all training scripts support mixed precision training. |
 | [v0.3.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.3.0) | 2024/08/03   | Implement models **CRNN_LSTM** and **CRNN_GRU** on datasets EMNIST and ChineseLicensePlate.                                                             |
 | [v0.2.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v0.2.0) | 2023/10/11   | Support training/evaluation/prediction of CRNN+CTC based on license plate.                                                                              |
