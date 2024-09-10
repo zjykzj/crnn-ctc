@@ -6,9 +6,13 @@
 @author: zj
 @description:
 
-Usage: Predict Plate:
+Usage: Predict Plate using CRNN:
     $ python predict_plate.py crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
     $ python predict_plate.py crnn-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
+
+Usage: Predict Plate using LPRNet:
+    $ python predict_plate.py lprnetv2-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lrpnet
+    $ python predict_plate.py lprnet-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lrpnet --use-origin-block
 
 """
 
@@ -32,29 +36,35 @@ import importlib
 # 根据脚本是否作为主模块运行来决定导入方式
 if __name__ == '__main__':
     # 直接运行时，使用绝对导入
-    CRNN = importlib.import_module('utils.model.crnn').CRNN
+    # CRNN = importlib.import_module('utils.model.crnn').CRNN
+    # LPRNet = importlib.import_module('utils.model.lprnet').LPRNet
     PLATE_CHARS = importlib.import_module('utils.dataset.plate').PLATE_CHARS
     model_info = importlib.import_module('utils.general').model_info
-    load_crnn = importlib.import_module('utils.general').load_crnn
+    load_ocr_model = importlib.import_module('utils.general').load_ocr_model
 else:
     # 被导入时，尝试使用相对导入，如果失败则回退到绝对导入
     try:
-        CRNN = importlib.import_module('.utils.model.crnn', package=__package__).CRNN
+        # CRNN = importlib.import_module('.utils.model.crnn', package=__package__).CRNN
+        # LPRNet = importlib.import_module('.utils.model.lprnet', package=__package__).LPRNet
         PLATE_CHARS = importlib.import_module('.utils.dataset.plate', package=__package__).PLATE_CHARS
         model_info = importlib.import_module('.utils.general', package=__package__).model_info
-        load_crnn = importlib.import_module('.utils.general', package=__package__).load_crnn
+        load_ocr_model = importlib.import_module('.utils.general', package=__package__).load_ocr_model
     except ValueError:
-        CRNN = importlib.import_module('utils.model.crnn').CRNN
+        # CRNN = importlib.import_module('utils.model.crnn').CRNN
+        # LPRNet = importlib.import_module('utils.model.lprnet').LPRNet
         PLATE_CHARS = importlib.import_module('utils.dataset.plate').PLATE_CHARS
         model_info = importlib.import_module('.utils.general').model_info
-        load_crnn = importlib.import_module('.utils.general').load_crnn
+        load_ocr_model = importlib.import_module('.utils.general').load_ocr_model
 
 
 def parse_opt():
-    parser = argparse.ArgumentParser(description='Predict CRNN with EMNIST')
+    parser = argparse.ArgumentParser(description='Predict CRNN/LPRNet with CCPD')
     parser.add_argument('pretrained', metavar='PRETRAINED', type=str, help='path to pretrained model')
     parser.add_argument('image_path', metavar='IMAGE', type=str, help='path to image path')
     parser.add_argument('save_dir', metavar='DST', type=str, help='path to save dir')
+
+    parser.add_argument("--use-lprnet", action='store_true', help='use LPRNet instead of CRNN')
+    parser.add_argument("--use-origin-block", action='store_true', help='use origin small_basic_block impl')
 
     parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
     parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
@@ -65,7 +75,7 @@ def parse_opt():
 
 
 @torch.no_grad()
-def predict_crnn(image, model=None, device=None):
+def predict_plate(image, model=None, device=None):
     start_time = time.time()
 
     # Data
@@ -109,11 +119,16 @@ def main():
         image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
 
     # Model
-    model, device = load_crnn(pretrained=args.pretrained, shape=(1, 3, 48, 168), num_classes=len(PLATE_CHARS),
-                              not_tiny=args.not_tiny, use_lstm=args.use_lstm)
+    if args.use_lprnet:
+        input_shape = (94, 24)
+    else:
+        input_shape = (168, 48)
+    model, device = load_ocr_model(pretrained=args.pretrained, shape=(1, 3, *input_shape), num_classes=len(PLATE_CHARS),
+                                   not_tiny=args.not_tiny, use_lstm=args.use_lstm,
+                                   use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block)
 
     # Predict
-    pred_plate, _ = predict_crnn(image=image, model=model, device=device)
+    pred_plate, _ = predict_plate(image=image, model=model, device=device)
 
     # Draw
     plt.figure()

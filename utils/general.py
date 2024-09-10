@@ -20,6 +20,7 @@ from copy import deepcopy
 
 from .logger import LOGGER
 from .model.crnn import CRNN
+from .model.lprnet import LPRNet
 
 
 def emojis(str=''):
@@ -76,9 +77,13 @@ def model_info(model, model_name, verbose=False, img_shape=(1, 3, 48, 168)):
     print(f"{model_name} summary: {len(list(model.modules()))} layers, {n_p} parameters, {n_g} gradients{fs}")
 
 
-def load_crnn(pretrained=None, device=None, shape=(1, 3, 48, 168), num_classes=100, not_tiny=False, use_lstm=False):
-    model = CRNN(in_channel=shape[1], num_classes=num_classes, cnn_input_height=shape[2], is_tiny=not not_tiny,
-                 use_gru=not use_lstm)
+def load_ocr_model(pretrained=None, device=None, shape=(1, 3, 48, 168), num_classes=100, not_tiny=False,
+                   use_lstm=False, use_lprnet=False, use_origin_block=False):
+    if use_lprnet:
+        model = LPRNet(in_channel=shape[1], num_classes=num_classes, use_origin_block=use_origin_block)
+    else:
+        model = CRNN(in_channel=shape[1], num_classes=num_classes, cnn_input_height=shape[2], is_tiny=not not_tiny,
+                     use_gru=not use_lstm)
     if pretrained is not None:
         if isinstance(pretrained, list):
             pretrained = pretrained[0]

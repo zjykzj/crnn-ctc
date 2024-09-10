@@ -6,9 +6,13 @@
 @author: zj
 @description:
 
-Usage - Single-GPU eval:
+Usage - Single-GPU eval using CRNN:
     $ python3 eval_plate.py crnn_tiny-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/
     $ python3 eval_plate.py crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny
+
+Usage - Single-GPU eval using LPRNet:
+    $ python3 eval_plate.py lprnetv2-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --use-lrpnet
+    $ python3 eval_plate.py lprnet-plate-b512-e100 ../datasets/chinese_license_plate/recog/ --use-lrpnet --use-origin-block
 
 Usage - Specify which dataset to evaluate:
     $ python3 eval_plate.py crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2019
@@ -24,18 +28,21 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from utils.general import load_crnn
+from utils.general import load_ocr_model
 from utils.dataset.plate import PlateDataset, PLATE_CHARS
 from utils.evaluator import Evaluator
 
 
 def parse_opt():
-    parser = argparse.ArgumentParser(description='Eval CRNN with EMNIST')
+    parser = argparse.ArgumentParser(description='Eval CRNN/LPRNet with CCPD')
     parser.add_argument('pretrained', metavar='PRETRAINED', type=str, help='path to pretrained model')
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to val dataset')
 
     parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
     parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
+
+    parser.add_argument("--use-lprnet", action='store_true', help='use LPRNet instead of CRNN')
+    parser.add_argument("--use-origin-block", action='store_true', help='use origin small_basic_block impl')
 
     parser.add_argument('--only-ccpd2019', action='store_true', help='only eval CCPD2019/test dataset')
     parser.add_argument('--only-ccpd2020', action='store_true', help='only eval CCPD2019/test dataset')
@@ -49,10 +56,13 @@ def parse_opt():
 @torch.no_grad()
 def val(args, val_root, pretrained):
     # (W, H)
-    input_shape = (168, 48)
-
-    model, device = load_crnn(pretrained=pretrained, shape=(1, 3, 48, 168), num_classes=len(PLATE_CHARS),
-                              not_tiny=args.not_tiny, use_lstm=args.use_lstm)
+    if args.use_lprnet:
+        input_shape = (94, 24)
+    else:
+        input_shape = (168, 48)
+    model, device = load_ocr_model(pretrained=pretrained, shape=(1, 3, *input_shape), num_classes=len(PLATE_CHARS),
+                                   not_tiny=args.not_tiny, use_lstm=args.use_lstm,
+                                   use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block)
 
     val_dataset = PlateDataset(val_root, is_train=False, input_shape=input_shape, only_ccpd2019=args.only_ccpd2019,
                                only_ccpd2020=args.only_ccpd2020, only_others=args.only_others)
