@@ -11,8 +11,8 @@ Usage - Single-GPU training using CRNN:
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b512/ --batch-size 512 --device 0 --not-tiny
 
 Usage - Single-GPU training using LPRNet:
-    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_tiny-plate-b512/ --batch-size 512 --device 0 --use-lprnet
-    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b512/ --batch-size 512 --device 0 --not-tiny --use-lprnet --use-origin-block
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnetv2-plate-b512/ --batch-size 512 --device 0 --use-lprnet
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet-plate-b512/ --batch-size 512 --device 0 --use-lprnet --use-origin-block
 
 """
 
