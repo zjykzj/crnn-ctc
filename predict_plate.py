@@ -11,8 +11,8 @@ Usage: Predict Plate using CRNN:
     $ python predict_plate.py crnn-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
 
 Usage: Predict Plate using LPRNet:
-    $ python predict_plate.py lprnetv2-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lrpnet
-    $ python predict_plate.py lprnet-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lrpnet --use-origin-block
+    $ python predict_plate.py lprnetv2-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
+    $ python predict_plate.py lprnet-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --use-origin-block
 
 """
 
@@ -75,12 +75,10 @@ def parse_opt():
 
 
 @torch.no_grad()
-def predict_plate(image, model=None, device=None):
+def predict_plate(image, model=None, device=None, img_h=48, img_w=168):
     start_time = time.time()
 
     # Data
-    img_w = 168
-    img_h = 48
     resize_image = cv2.resize(image, (img_w, img_h))
 
     data = torch.from_numpy(resize_image).float() / 255.
@@ -120,15 +118,17 @@ def main():
 
     # Model
     if args.use_lprnet:
-        input_shape = (94, 24)
+        img_w = 94
+        img_h = 24
     else:
-        input_shape = (168, 48)
-    model, device = load_ocr_model(pretrained=args.pretrained, shape=(1, 3, *input_shape), num_classes=len(PLATE_CHARS),
+        img_w = 168
+        img_h = 48
+    model, device = load_ocr_model(pretrained=args.pretrained, shape=(1, 3, img_h, img_w), num_classes=len(PLATE_CHARS),
                                    not_tiny=args.not_tiny, use_lstm=args.use_lstm,
                                    use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block)
 
     # Predict
-    pred_plate, _ = predict_plate(image=image, model=model, device=device)
+    pred_plate, _ = predict_plate(image=image, model=model, device=device, img_h=img_h, img_w=img_w)
 
     # Draw
     plt.figure()

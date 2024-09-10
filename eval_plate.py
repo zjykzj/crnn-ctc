@@ -11,8 +11,8 @@ Usage - Single-GPU eval using CRNN:
     $ python3 eval_plate.py crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny
 
 Usage - Single-GPU eval using LPRNet:
-    $ python3 eval_plate.py lprnetv2-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --use-lrpnet
-    $ python3 eval_plate.py lprnet-plate-b512-e100 ../datasets/chinese_license_plate/recog/ --use-lrpnet --use-origin-block
+    $ python3 eval_plate.py lprnetv2-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --use-lprnet
+    $ python3 eval_plate.py lprnet-plate-b512-e100 ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block
 
 Usage - Specify which dataset to evaluate:
     $ python3 eval_plate.py crnn-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2019
@@ -57,14 +57,16 @@ def parse_opt():
 def val(args, val_root, pretrained):
     # (W, H)
     if args.use_lprnet:
-        input_shape = (94, 24)
+        img_w = 94
+        img_h = 24
     else:
-        input_shape = (168, 48)
-    model, device = load_ocr_model(pretrained=pretrained, shape=(1, 3, *input_shape), num_classes=len(PLATE_CHARS),
+        img_w = 168
+        img_h = 48
+    model, device = load_ocr_model(pretrained=pretrained, shape=(1, 3, img_h, img_w), num_classes=len(PLATE_CHARS),
                                    not_tiny=args.not_tiny, use_lstm=args.use_lstm,
                                    use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block)
 
-    val_dataset = PlateDataset(val_root, is_train=False, input_shape=input_shape, only_ccpd2019=args.only_ccpd2019,
+    val_dataset = PlateDataset(val_root, is_train=False, input_shape=(img_w, img_h), only_ccpd2019=args.only_ccpd2019,
                                only_ccpd2020=args.only_ccpd2020, only_others=args.only_others)
     val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4, drop_last=False,
                                 pin_memory=True)
