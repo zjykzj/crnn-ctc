@@ -6,9 +6,13 @@
 @author: zj
 @description:
 
-Usage - Single-GPU training:
+Usage - Single-GPU training using CRNN:
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_tiny-plate-b512/ --batch-size 512 --device 0
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b512/ --batch-size 512 --device 0 --not-tiny
+
+Usage - Single-GPU training using LPRNet:
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_tiny-plate-b512/ --batch-size 512 --device 0 --use-lprnet
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b512/ --batch-size 512 --device 0 --not-tiny --use-lprnet --use-origin-block
 
 """
 
@@ -79,10 +83,18 @@ def train(opt, device):
         # (W, H)
         input_shape = (94, 24)
         model = LPRNet(in_channel=3, num_classes=len(PLATE_CHARS), use_origin_block=use_origin_block).to(device)
+        if use_origin_block:
+            model_prefix = 'lprnet'
+        else:
+            model_prefix = "lprnetv2"
     else:
         input_shape = (168, 48)
         model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_input_height=input_shape[1], is_tiny=not not_tiny,
                      use_gru=not use_lstm).to(device)
+        if not_tiny:
+            model_prefix = 'crnn'
+        else:
+            model_prefix = "crnn_tiny"
 
     blank_label = 0
     criterion = CTCLoss(blank_label=blank_label).to(device)
@@ -161,9 +173,9 @@ def train(opt, device):
         if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
             if not_tiny:
-                save_path = os.path.join(output, f"crnn-plate-b{batch_size}-e{epoch}.pth")
+                save_path = os.path.join(output, f"{model_prefix}-plate-b{batch_size}-e{epoch}.pth")
             else:
-                save_path = os.path.join(output, f"crnn_tiny-plate-b{batch_size}-e{epoch}.pth")
+                save_path = os.path.join(output, f"{model_prefix}_tiny-plate-b{batch_size}-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 
