@@ -12,6 +12,27 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+def initialize_weights(module):
+    for m in module.modules():
+        if isinstance(m, nn.Conv2d):
+            torch.nn.init.xavier_uniform_(m.weight)
+            if m.bias is not None:
+                torch.nn.init.zeros_(m.bias)
+        elif isinstance(m, nn.BatchNorm2d):
+            torch.nn.init.ones_(m.weight)  # Initialize gamma with ones
+            torch.nn.init.zeros_(m.bias)  # Initialize beta with zeros
+        elif isinstance(m, nn.GRU) or isinstance(m, nn.LSTM):
+            for name, param in m.named_parameters():
+                if 'weight' in name:
+                    torch.nn.init.xavier_uniform_(param)
+                elif 'bias' in name:
+                    torch.nn.init.zeros_(param)
+        elif isinstance(m, nn.Linear):
+            torch.nn.init.xavier_uniform_(m.weight)
+            if m.bias is not None:
+                torch.nn.init.zeros_(m.bias)
+
+
 class CRNN(nn.Module):
 
     def __init__(self, in_channel, num_classes, cnn_input_height, is_tiny=True, use_gru=True):
@@ -92,6 +113,9 @@ class CRNN(nn.Module):
                                bidirectional=True)
 
         self.fc = nn.Linear(in_features=rnn_input_size, out_features=num_classes)
+
+        # 添加权重初始化
+        initialize_weights(self)
 
     def forward(self, x):
         # CNN 层
