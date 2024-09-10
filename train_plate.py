@@ -24,6 +24,7 @@ import torch.distributed as dist
 from torch.utils.data import DataLoader, distributed
 
 from utils.model.crnn import CRNN
+from utils.model.lprnet import LPRNet
 from utils.loss import CTCLoss
 from utils.evaluator import Evaluator
 from utils.torchutil import select_device
@@ -44,7 +45,10 @@ def parse_opt():
 
     parser.add_argument('--batch-size', type=int, default=512, help='total batch size for all GPUs, -1 for autobatch')
     parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
-    parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
+    parser.add_argument('--not-tiny', action='store_true', help='use this flag to specify non-tiny mode')
+
+    parser.add_argument("--use-lprnet", action='store_true', help='use LPRNet instead of CRNN')
+    parser.add_argument("--use-origin-block", action='store_true', help='use origin small_basic_block impl')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -65,16 +69,21 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
 
 
 def train(opt, device):
-    data_root, batch_size, not_tiny, use_lstm, output = opt.data, opt.batch_size, opt.not_tiny, opt.use_lstm, opt.output
+    data_root, batch_size, not_tiny, use_lstm, use_lprnet, use_origin_block, output = \
+        opt.data, opt.batch_size, opt.not_tiny, opt.use_lstm, opt.use_lprnet, opt.use_origin_block, opt.output
     if RANK in {-1, 0} and not os.path.exists(output):
         os.makedirs(output)
 
-    # (W, H)
-    input_shape = (168, 48)
-
     LOGGER.info("=> Create Model")
-    model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_input_height=input_shape[1], is_tiny=not not_tiny,
-                 use_gru=not use_lstm).to(device)
+    if use_lprnet:
+        # (W, H)
+        input_shape = (94, 24)
+        model = LPRNet(in_channel=3, num_classes=len(PLATE_CHARS), use_origin_block=use_origin_block).to(device)
+    else:
+        input_shape = (168, 48)
+        model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_input_height=input_shape[1], is_tiny=not not_tiny,
+                     use_gru=not use_lstm).to(device)
+
     blank_label = 0
     criterion = CTCLoss(blank_label=blank_label).to(device)
 
