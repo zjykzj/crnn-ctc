@@ -7,12 +7,12 @@
 @description:
 
 Usage: Predict Plate using CRNN:
-    $ python predict_plate.py crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
-    $ python predict_plate.py crnn-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
+    $ python predict_plate.py crnn_tiny-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
+    $ python predict_plate.py crnn-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
 
 Usage: Predict Plate using LPRNet:
-    $ python predict_plate.py lprnetv2-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
-    $ python predict_plate.py lprnet-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --use-origin-block
+    $ python predict_plate.py lprnetv2-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
+    $ python predict_plate.py lprnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --use-origin-block
 
 """
 
