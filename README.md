@@ -74,6 +74,12 @@ plate recognition
 $ pip install -r requirements.txt
 ```
 
+Or use docker container
+
+```shell
+docker run -it --runtime nvidia --gpus=all --shm-size=16g -v /etc/localtime:/etc/localtime -v $(pwd):/workdir --workdir=/workdir --name crnn-ctc ultralytics/yolov5:latest
+```
+
 ## Usage
 
 ### Train
