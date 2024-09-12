@@ -77,7 +77,7 @@ $ pip install -r requirements.txt
 Or use docker container
 
 ```shell
-docker run -it --runtime nvidia --gpus=all --shm-size=16g -v /etc/localtime:/etc/localtime -v $(pwd):/workdir --workdir=/workdir --name crnn-ctc ultralytics/yolov5:latest
+$ docker run -it --runtime nvidia --gpus=all --shm-size=16g -v /etc/localtime:/etc/localtime -v $(pwd):/workdir --workdir=/workdir --name crnn-ctc ultralytics/yolov5:latest
 ```
 
 ## Usage
@@ -104,13 +104,13 @@ crnn_tiny-emnist-b512-e100 summary: 22 layers, 427467 parameters, 427467 gradien
 Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:19<00:00, 80.29it/s]
 ACC:98.278
 # Plate
-$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py crnn_tiny-plate-b512-e100.pth ../datasets/chinese_license_plate/recog/
-args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='crnn_tiny-plate-b512-e100.pth', use_lstm=False, val_root='../datasets/chinese_license_plate/recog/')
-Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
-crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py crnn_tiny-plate.pth ../datasets/chinese_license_plate/recog/
+args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='crnn_tiny-plate.pth', use_lprnet=False, use_lstm=False, use_origin_block=False, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: crnn_tiny-plate.pth
+crnn_tiny-plate summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
 Load test data: 149002
-Batch:4656 ACC:90.000: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4657/4657 [01:08<00:00, 67.50it/s]
-ACC:76.226
+Batch:4656 ACC:100.000: 100%|███████████████████████████████████████████████████████████| 4657/4657 [00:36<00:00, 125.99it/s]
+ACC:76.590
 ```
 
 ### Predict
@@ -131,17 +131,17 @@ Label: [0 1 4 3 6] Pred: [0 1 4 3 6]
 ![](assets/predict/emnist/predict_emnist.jpg)
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn_tiny-plate-b512-e100.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
-args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=False, pretrained='crnn_tiny-plate-b512-e100.pth', save_dir='runs/predict/plate/', use_lstm=False)
-Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
-crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
-Pred: 宁A·87J92 - Predict time: 8.4 ms
+$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn_tiny-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
+args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=False, pretrained='crnn_tiny-plate.pth', save_dir='runs/predict/plate/', use_lprnet=False, use_lstm=False, use_origin_block=False)
+Loading CRNN pretrained: crnn_tiny-plate.pth
+crnn_tiny-plate summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+Pred: 宁A·87J92 - Predict time: 3.7 ms
 Save to runs/predict/plate/plate_宁A87J92_0.jpg
-$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn_tiny-plate-b512-e100.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/
-args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=False, pretrained='crnn_tiny-plate-b512-e100.pth', save_dir='runs/predict/plate/', use_lstm=False)
-Loading CRNN pretrained: crnn_tiny-plate-b512-e100.pth
-crnn_tiny-plate-b512-e100 summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
-Pred: 川A·3X7J1 - Predict time: 8.4 ms
+$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn_tiny-plate.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/
+args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=False, pretrained='crnn_tiny-plate.pth', save_dir='runs/predict/plate/', use_lprnet=False, use_lstm=False, use_origin_block=False)
+Loading CRNN pretrained: crnn_tiny-plate.pth
+crnn_tiny-plate summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+Pred: 川A·3X7J1 - Predict time: 3.5 ms
 Save to runs/predict/plate/plate_川A3X7J1_0.jpg
 ```
 
