@@ -155,6 +155,7 @@ Save to runs/predict/plate/plate_川A3X7J1_0.jpg
 
 * [rinabuoy/crnn-ctc-loss-pytorch](https://github.com/rinabuoy/crnn-ctc-loss-pytorch.git)
 * [we0091234/crnn_plate_recognition](https://github.com/we0091234/crnn_plate_recognition.git)
+* [sirius-ai/LPRNet_Pytorch](https://github.com/sirius-ai/LPRNet_Pytorch)
 * [zjykzj/LPDet](https://github.com/zjykzj/LPDet)
 
 ## Contributing
