@@ -172,10 +172,7 @@ def train(opt, device):
 
         if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
-            if not_tiny:
-                save_path = os.path.join(output, f"{model_prefix}-plate-b{batch_size}-e{epoch}.pth")
-            else:
-                save_path = os.path.join(output, f"{model_prefix}_tiny-plate-b{batch_size}-e{epoch}.pth")
+            save_path = os.path.join(output, f"{model_prefix}-plate-b{batch_size}-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 
