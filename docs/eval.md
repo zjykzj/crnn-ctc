@@ -3,21 +3,21 @@
 ## EMNIST
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/
-args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist-b512-e100.pth', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: crnn_tiny-emnist-b512-e100.pth
-crnn_tiny-emnist-b512-e100 summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
-Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:19<00:00, 80.29it/s]
-ACC:98.278
+$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn_tiny-emnist.pth ../datasets/emnist/
+args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist.pth', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: crnn_tiny-emnist.pth
+crnn_tiny-emnist summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
+Batch:49999 ACC:100.000: 100%|████████████████████████████████████████████████████████| 50000/50000 [02:42<00:00, 308.44it/s]
+ACC:98.482
 ```
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn-emnist-b512-e100.pth ../datasets/emnist/ --not-tiny
-args: Namespace(not_tiny=True, pretrained='crnn-emnist-b512-e100.pth', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: crnn-emnist-b512-e100.pth
-crnn-emnist-b512-e100 summary: 29 layers, 7924363 parameters, 7924363 gradients, 2.2 GFLOPs
-Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:17<00:00, 86.84it/s]
-ACC:98.718
+$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn-emnist.pth ../datasets/emnist/ --not-tiny
+args: Namespace(not_tiny=True, pretrained='crnn-emnist.pth', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: crnn-emnist.pth
+crnn-emnist summary: 29 layers, 7924363 parameters, 7924363 gradients, 2.2 GFLOPs
+Batch:49999 ACC:100.000: 100%|████████████████████████████████████████████████████████| 50000/50000 [03:53<00:00, 213.84it/s]
+ACC:98.640
 ```
 
 ## License Plate
