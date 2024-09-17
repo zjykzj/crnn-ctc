@@ -19,8 +19,8 @@ ONLINE DEMO：[LICENSE PLATE RECOGNITION](https://blog.zjykzj.cn/gradio/plate_re
 
 |   **Model**   | **ARCH** | **Input Shape** | **GFLOPs** | **Model Size (MB)** | **EMNIST Accuracy (%)** | **Training Data** | **Testing Data** |
 |:-------------:|:--------:|:---------------:|:----------:|:-------------------:|:-----------------------:|:-----------------:|:----------------:|
-|   **CRNN**    | CONV+GRU |  (1, 32, 160)   |    2.2     |         31          |         98.718          |      100,000      |      5,000       |
-| **CRNN_Tiny** | CONV+GRU |  (1, 32, 160)   |    0.1     |         1.7         |         98.278          |      100,000      |      5,000       |
+|   **CRNN**    | CONV+GRU |  (1, 32, 160)   |    2.2     |         31          |         98.640          |      100,000      |      5,000       |
+| **CRNN_Tiny** | CONV+GRU |  (1, 32, 160)   |    0.1     |         1.7         |         98.482          |      100,000      |      5,000       |
 
 |   **Model**    | **ARCH** | **Input Shape** | **GFLOPs** | **Model Size (MB)** | **ChineseLicensePlate Accuracy (%)** | **Training Data** | **Testing Data** |
 |:--------------:|:--------:|:---------------:|:----------:|:-------------------:|:------------------------------------:|:-----------------:|:----------------:|
@@ -97,10 +97,10 @@ $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-pl
 
 ```shell
 # EMNIST
-$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/
-args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist-b512-e100.pth', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: crnn_tiny-emnist-b512-e100.pth
-crnn_tiny-emnist-b512-e100 summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
+$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn_tiny-emnist.pth ../datasets/emnist/
+args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist.pth', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: crnn_tiny-emnist.pth
+crnn_tiny-emnist summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
 Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:19<00:00, 80.29it/s]
 ACC:98.278
 # Plate
@@ -116,10 +116,10 @@ ACC:76.590
 ### Predict
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python predict_emnist.py crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/
-args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist-b512-e100.pth', save_dir='./runs/predict/emnist/', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: crnn_tiny-emnist-b512-e100.pth
-crnn_tiny-emnist-b512-e100 summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
+$ CUDA_VISIBLE_DEVICES=0 python predict_emnist.py crnn_tiny-emnist.pth ../datasets/emnist/ ./runs/predict/emnist/
+args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist.pth', save_dir='./runs/predict/emnist/', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: crnn_tiny-emnist.pth
+crnn_tiny-emnist summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
 Label: [3 8 5 8 5] Pred: [3 8 5 8 5]
 Label: [4 8 6 8 0] Pred: [4 8 6 8 0]
 Label: [4 6 4 7 0] Pred: [4 6 4 7 0]

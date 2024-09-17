@@ -5,7 +5,7 @@
 ```shell
 $ CUDA_VISIBLE_DEVICES=0 python predict_emnist.py crnn_tiny-emnist.pth ../datasets/emnist/ ./runs/predict/emnist/
 args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist.pth', save_dir='./runs/predict/emnist/', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: crnn_tiny-emnist-b512-e100.pth
+Loading CRNN pretrained: crnn_tiny-emnist.pth
 crnn_tiny-emnist summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
 Label: [3 8 5 8 5] Pred: [3 8 5 8 5]
 Label: [4 8 6 8 0] Pred: [4 8 6 8 0]
