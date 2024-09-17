@@ -7,8 +7,8 @@
 @description:
 
 Usage: Predict EMNIST:
-    $ python predict_emnist.py crnn_tiny-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/
-    $ python predict_emnist.py crnn-emnist-b512-e100.pth ../datasets/emnist/ ./runs/predict/emnist/ --not-tiny
+    $ python predict_emnist.py crnn_tiny-emnist.pth ../datasets/emnist/ ./runs/predict/emnist/
+    $ python predict_emnist.py crnn-emnist.pth ../datasets/emnist/ ./runs/predict/emnist/ --not-tiny
 
 """
 
@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 import torch
 
-from utils.general import load_crnn
+from utils.general import load_ocr_model
 from utils.dataset.emnist import EMNISTDataset, DIGITS_CHARS
 
 
@@ -44,8 +44,8 @@ def predict(args, val_root, pretrained, save_dir):
     img_h = 32
     digits_per_sequence = 5
 
-    model, device = load_crnn(pretrained=pretrained, shape=(1, 1, img_h, digits_per_sequence * img_h),
-                              num_classes=len(DIGITS_CHARS), not_tiny=args.not_tiny, use_lstm=args.use_lstm)
+    model, device = load_ocr_model(pretrained=pretrained, shape=(1, 1, img_h, digits_per_sequence * img_h),
+                                   num_classes=len(DIGITS_CHARS), not_tiny=args.not_tiny, use_lstm=args.use_lstm)
 
     val_dataset = EMNISTDataset(val_root, is_train=False, num_of_sequences=50000,
                                 digits_per_sequence=digits_per_sequence, img_h=img_h)
