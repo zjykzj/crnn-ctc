@@ -7,8 +7,8 @@
 @Description:
 
 Usage: Pytorch to ONNX:
-    $ python3 pth2onnx.py ./crnn_tiny-plate-b512-e100.pth ./runs/crnn_tiny-plate.onnx
-    $ python3 pth2onnx.py ./crnn_tiny-emnist-b512-e100.pth ./runs/crnn_tiny-emnist.onnx
+    $ python3 pth2onnx.py ./crnn_tiny-emnist.pth ./runs/crnn_tiny-emnist.onnx
+    $ python3 pth2onnx.py ./crnn_tiny-plate.pth ./runs/crnn_tiny-plate.onnx
 
 """
 
@@ -23,7 +23,7 @@ import onnxruntime
 import torch.onnx
 import torch.nn as nn
 
-from utils.general import load_crnn
+from utils.general import load_ocr_model
 from utils.dataset.emnist import DIGITS_CHARS
 from utils.dataset.plate import PLATE_CHARS
 
@@ -35,6 +35,9 @@ def parse_opt():
 
     parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
     parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
+
+    parser.add_argument("--use-lprnet", action='store_true', help='use LPRNet instead of CRNN')
+    parser.add_argument("--use-origin-block", action='store_true', help='use origin small_basic_block impl')
 
     args = parser.parse_args()
     print(f"args: {args}")
@@ -91,7 +94,7 @@ def export_to_onnx(torch_model, shape=None, onnx_path="pytorch.onnx", is_dynamic
                       x,  # model input (or a tuple for multiple inputs)
                       onnx_path,  # where to save the model (can be a file or file-like object)
                       export_params=True,  # store the trained parameter weights inside the model file
-                      opset_version=14,  # the ONNX version to export the model to
+                      opset_version=12,  # the ONNX version to export the model to
                       do_constant_folding=True,  # whether to execute constant folding for optimization
                       input_names=['input'],  # the model's input names
                       output_names=['output'],  # the model's output names
@@ -106,14 +109,19 @@ def main(args):
     # UserWarning: Exporting a model to ONNX with a batch_size other than 1, with a variable length with GRU can cause an error when running the ONNX model with a different batch size.
     # Make sure to save the model with a batch size of 1, or define the initial states (h0/c0) as inputs of the model.
     if 'plate' in os.path.basename(args.pretrained):
-        shape = (1, 3, 48, 168)
+        if args.use_lprnet:
+            shape = (1, 3, 24, 94)
+        else:
+            shape = (1, 3, 48, 168)
         num_classes = len(PLATE_CHARS)
     else:
         shape = (1, 1, 32, 160)
         num_classes = len(DIGITS_CHARS)
 
-    model, device = load_crnn(pretrained=args.pretrained, shape=shape, num_classes=num_classes,
-                              not_tiny=args.not_tiny, use_lstm=args.use_lstm)
+    model, _ = load_ocr_model(pretrained=args.pretrained, device=torch.device("cpu"),
+                              shape=shape, num_classes=num_classes,
+                              not_tiny=args.not_tiny, use_lstm=args.use_lstm,
+                              use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block)
 
     onnx_path = args.save
     export_to_onnx(model, shape=shape, onnx_path=onnx_path, is_dynamic=False)
