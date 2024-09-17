@@ -132,38 +132,6 @@ Batch:62 ACC:96.667: 100%|██████████████████
 ACC:97.617
 ```
 
-### LPRNet
-
-```shell
-$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block --only-ccpd2019
-args: Namespace(not_tiny=False, only_ccpd2019=True, only_ccpd2020=False, only_others=False, pretrained='lprnet-plate.pth', use_lprnet=True, use_lstm=False, use_origin_block=True, val_root='../datasets/chinese_license_plate/recog/')
-Loading CRNN pretrained: lprnet-plate.pth
-lprnet-plate summary: 51 layers, 486236 parameters, 486236 gradients, 0.3 GFLOPs
-Load test data: 141982
-Batch:4436 ACC:40.000: 100%|████████████████████████████████████████████████████████████| 4437/4437 [00:28<00:00, 157.58it/s]
-ACC:59.686
-```
-
-```shell
-$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block --only-ccpd2020
-args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=True, only_others=False, pretrained='lprnet-plate.pth', use_lprnet=True, use_lstm=False, use_origin_block=True, val_root='../datasets/chinese_license_plate/recog/')
-Loading CRNN pretrained: lprnet-plate.pth
-lprnet-plate summary: 51 layers, 486236 parameters, 486236 gradients, 0.3 GFLOPs
-Load test data: 5006
-Batch:156 ACC:71.429: 100%|███████████████████████████████████████████████████████████████| 157/157 [00:01<00:00, 101.93it/s]
-ACC:87.335
-```
-
-```shell
-$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block --only-others
-args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=False, only_others=True, pretrained='lprnet-plate.pth', use_lprnet=True, use_lstm=False, use_origin_block=True, val_root='../datasets/chinese_license_plate/recog/')
-Loading CRNN pretrained: lprnet-plate.pth
-lprnet-plate summary: 51 layers, 486236 parameters, 486236 gradients, 0.3 GFLOPs
-Load test data: 2014
-Batch:62 ACC:96.667: 100%|███████████████████████████████████████████████████████████████████| 63/63 [00:00<00:00, 72.31it/s]
-ACC:95.283
-```
-
 ### LPRNetPlus
 
 ```shell
@@ -194,4 +162,36 @@ lprnet_plus-plate summary: 57 layers, 576988 parameters, 576988 gradients, 0.5 G
 Load test data: 2014
 Batch:62 ACC:96.667: 100%|███████████████████████████████████████████████████████████████████| 63/63 [00:00<00:00, 68.93it/s]
 ACC:95.631
+```
+
+### LPRNet
+
+```shell
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block --only-ccpd2019
+args: Namespace(not_tiny=False, only_ccpd2019=True, only_ccpd2020=False, only_others=False, pretrained='lprnet-plate.pth', use_lprnet=True, use_lstm=False, use_origin_block=True, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: lprnet-plate.pth
+lprnet-plate summary: 51 layers, 486236 parameters, 486236 gradients, 0.3 GFLOPs
+Load test data: 141982
+Batch:4436 ACC:40.000: 100%|████████████████████████████████████████████████████████████| 4437/4437 [00:28<00:00, 157.58it/s]
+ACC:59.686
+```
+
+```shell
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block --only-ccpd2020
+args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=True, only_others=False, pretrained='lprnet-plate.pth', use_lprnet=True, use_lstm=False, use_origin_block=True, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: lprnet-plate.pth
+lprnet-plate summary: 51 layers, 486236 parameters, 486236 gradients, 0.3 GFLOPs
+Load test data: 5006
+Batch:156 ACC:71.429: 100%|███████████████████████████████████████████████████████████████| 157/157 [00:01<00:00, 101.93it/s]
+ACC:87.335
+```
+
+```shell
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block --only-others
+args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=False, only_others=True, pretrained='lprnet-plate.pth', use_lprnet=True, use_lstm=False, use_origin_block=True, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: lprnet-plate.pth
+lprnet-plate summary: 51 layers, 486236 parameters, 486236 gradients, 0.3 GFLOPs
+Load test data: 2014
+Batch:62 ACC:96.667: 100%|███████████████████████████████████████████████████████████████████| 63/63 [00:00<00:00, 72.31it/s]
+ACC:95.283
 ```
