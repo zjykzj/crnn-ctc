@@ -68,7 +68,7 @@ Pred: 川A·3X7J1 - Predict time: 4.5 ms
 Save to runs/predict/plate/plate_川A3X7J1_0.jpg
 ```
 
-### LPRNet/LPRNetv2
+### LPRNet/LPRNetPlus
 
 ```shell
 $ CUDA_VISIBLE_DEVICES=0 python predict_plate.py lprnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --use-origin-block
@@ -80,10 +80,10 @@ Save to runs/predict/plate/plate_宁A87J92_0.jpg
 ```
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py lprnetv2-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
-args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=False, pretrained='lprnetv2-plate.pth', save_dir='runs/predict/plate/', use_lprnet=True, use_lstm=False, use_origin_block=False)
-Loading CRNN pretrained: lprnetv2-plate.pth
-lprnetv2-plate summary: 57 layers, 576988 parameters, 576988 gradients, 0.5 GFLOPs
+$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py lprnet_plus-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
+args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=False, pretrained='lprnet_plus-plate.pth', save_dir='runs/predict/plate/', use_lprnet=True, use_lstm=False, use_origin_block=False)
+Loading CRNN pretrained: lprnet_plus-plate.pth
+lprnet_plus-plate summary: 57 layers, 576988 parameters, 576988 gradients, 0.5 GFLOPs
 Pred: 宁A·87J92 - Predict time: 2.8 ms
 Save to runs/predict/plate/plate_宁A87J92_0.jpg
 ```
@@ -98,10 +98,10 @@ Save to runs/predict/plate/plate_川A3X7J1_0.jpg
 ```
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py lprnetv2-plate.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/ --use-lprnet
-args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=False, pretrained='lprnetv2-plate.pth', save_dir='runs/predict/plate/', use_lprnet=True, use_lstm=False, use_origin_block=False)
-Loading CRNN pretrained: lprnetv2-plate.pth
-lprnetv2-plate summary: 57 layers, 576988 parameters, 576988 gradients, 0.5 GFLOPs
+$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py lprnet_plus-plate.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/ --use-lprnet
+args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=False, pretrained='lprnet_plus-plate.pth', save_dir='runs/predict/plate/', use_lprnet=True, use_lstm=False, use_origin_block=False)
+Loading CRNN pretrained: lprnet_plus-plate.pth
+lprnet_plus-plate summary: 57 layers, 576988 parameters, 576988 gradients, 0.5 GFLOPs
 Pred: 川A·3X7J1 - Predict time: 2.7 ms
 Save to runs/predict/plate/plate_川A3X7J1_0.jpg
 ```

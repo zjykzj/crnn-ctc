@@ -11,7 +11,7 @@ Usage: Predict Plate using CRNN:
     $ python predict_plate.py crnn-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
 
 Usage: Predict Plate using LPRNet:
-    $ python predict_plate.py lprnetv2-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
+    $ python predict_plate.py lprnet_plus-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
     $ python predict_plate.py lprnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --use-origin-block
 
 """

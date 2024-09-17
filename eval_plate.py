@@ -11,7 +11,7 @@ Usage - Single-GPU eval using CRNN:
     $ python3 eval_plate.py crnn-plate.pth ../datasets/chinese_license_plate/recog/ --not-tiny
 
 Usage - Single-GPU eval using LPRNet:
-    $ python3 eval_plate.py lprnetv2-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet
+    $ python3 eval_plate.py lprnet_plus-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet
     $ python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block
 
 Usage - Specify which dataset to evaluate:
