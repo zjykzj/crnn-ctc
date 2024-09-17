@@ -37,6 +37,7 @@ class small_basic_block(nn.Module):
             nn.ReLU(),
             nn.Conv2d(ch_out // 4, ch_out, kernel_size=1),
         )
+        self.apply(init_weights)
 
     def forward(self, x):
         return self.block(x)
@@ -75,7 +76,7 @@ class small_basic_block_v2(nn.Module):
 
 
 class LPRNet(nn.Module):
-    def __init__(self, num_classes, in_channel=3, dropout_rate=0.5, use_origin_block=False):
+    def __init__(self, num_classes, in_channel=3, dropout_rate=0.5, use_origin_block=False, add_stnet=False):
         super(LPRNet, self).__init__()
         self.num_classes = num_classes
 
@@ -83,6 +84,11 @@ class LPRNet(nn.Module):
             small_block = small_basic_block
         else:
             small_block = small_basic_block_v2
+
+        self.add_stnet = add_stnet
+        if self.add_stnet:
+            from utils.model.stnet import STNet
+            self.stnet = STNet()
 
         self.backbone = nn.Sequential(
             nn.Conv2d(in_channels=in_channel, out_channels=64, kernel_size=3, stride=1),  # 0
@@ -117,6 +123,9 @@ class LPRNet(nn.Module):
         self.apply(init_weights)
 
     def forward(self, x):
+        if self.add_stnet:
+            x = self.stnet(x)
+
         keep_features = list()
         for i, layer in enumerate(self.backbone.children()):
             x = layer(x)
@@ -168,8 +177,14 @@ if __name__ == '__main__':
     data = torch.randn(5, 3, 24, 94)
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
+    # LPRNetPlus
     model = LPRNet(num_classes=100, in_channel=3, use_origin_block=False).to(device)
     test_model(copy.deepcopy(data), model, device)
 
+    # LPRNet
     model = LPRNet(num_classes=100, in_channel=3, use_origin_block=True).to(device)
+    test_model(copy.deepcopy(data), model, device)
+
+    # LPRNetPlus + STNet
+    model = LPRNet(num_classes=100, in_channel=3, use_origin_block=False, add_stnet=True).to(device)
     test_model(copy.deepcopy(data), model, device)
