@@ -14,6 +14,9 @@ Usage - Single-GPU training using LPRNet:
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet_plus-plate-b512/ --batch-size 512 --device 0 --use-lprnet
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet-plate-b512/ --batch-size 512 --device 0 --use-lprnet --use-origin-block
 
+Usage - Single-GPU training using LPRNet+STNet:
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet_plus-plate-b512/ --batch-size 512 --device 0 --use-lprnet --add-stnet
+
 """
 
 import argparse
@@ -53,6 +56,7 @@ def parse_opt():
 
     parser.add_argument("--use-lprnet", action='store_true', help='use LPRNet instead of CRNN')
     parser.add_argument("--use-origin-block", action='store_true', help='use origin small_basic_block impl')
+    parser.add_argument("--add-stnet", action='store_true', help='add STNet for training and evaluation')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--seed', type=int, default=0, help='Global training seed')
@@ -73,8 +77,8 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
 
 
 def train(opt, device):
-    data_root, batch_size, not_tiny, use_lstm, use_lprnet, use_origin_block, output = \
-        opt.data, opt.batch_size, opt.not_tiny, opt.use_lstm, opt.use_lprnet, opt.use_origin_block, opt.output
+    data_root, batch_size, not_tiny, use_lstm, use_lprnet, use_origin_block, add_stnet, output = \
+        opt.data, opt.batch_size, opt.not_tiny, opt.use_lstm, opt.use_lprnet, opt.use_origin_block, opt.add_stnet, opt.output
     if RANK in {-1, 0} and not os.path.exists(output):
         os.makedirs(output)
 
@@ -82,11 +86,14 @@ def train(opt, device):
     if use_lprnet:
         # (W, H)
         input_shape = (94, 24)
-        model = LPRNet(in_channel=3, num_classes=len(PLATE_CHARS), use_origin_block=use_origin_block).to(device)
+        model = LPRNet(in_channel=3, num_classes=len(PLATE_CHARS), use_origin_block=use_origin_block,
+                       add_stnet=add_stnet).to(device)
         if use_origin_block:
             model_prefix = 'lprnet'
         else:
             model_prefix = "lprnet_plus"
+        if add_stnet:
+            model_prefix += '_stnet'
     else:
         input_shape = (168, 48)
         model = CRNN(in_channel=3, num_classes=len(PLATE_CHARS), cnn_input_height=input_shape[1], is_tiny=not not_tiny,
