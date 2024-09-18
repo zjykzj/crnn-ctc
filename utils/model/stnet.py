@@ -48,6 +48,7 @@ class STNet(nn.Module):
 
         # /home/zj/anaconda3/envs/yolov5/lib/python3.8/site-packages/torch/nn/functional.py:3828: UserWarning: Default grid_sample and affine_grid behavior has changed to align_corners=False since 1.3.0. Please specify align_corners=True if the old behavior is desired. See the documentation of grid_sample for details.
         #   warnings.warn(
+        # align_corners=False is better than align_corners=True
         grid = F.affine_grid(theta, x.size(), align_corners=False)
         x = F.grid_sample(x, grid)
 
