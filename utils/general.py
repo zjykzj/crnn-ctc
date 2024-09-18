@@ -78,9 +78,10 @@ def model_info(model, model_name, verbose=False, img_shape=(1, 3, 48, 168)):
 
 
 def load_ocr_model(pretrained=None, device=None, shape=(1, 3, 48, 168), num_classes=100, not_tiny=False,
-                   use_lstm=False, use_lprnet=False, use_origin_block=False):
+                   use_lstm=False, use_lprnet=False, use_origin_block=False, add_stnet=False):
     if use_lprnet:
-        model = LPRNet(in_channel=shape[1], num_classes=num_classes, use_origin_block=use_origin_block)
+        model = LPRNet(in_channel=shape[1], num_classes=num_classes, use_origin_block=use_origin_block,
+                       add_stnet=add_stnet)
     else:
         model = CRNN(in_channel=shape[1], num_classes=num_classes, cnn_input_height=shape[2], is_tiny=not not_tiny,
                      use_gru=not use_lstm)

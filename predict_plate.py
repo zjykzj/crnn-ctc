@@ -14,6 +14,9 @@ Usage: Predict Plate using LPRNet:
     $ python predict_plate.py lprnet_plus-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
     $ python predict_plate.py lprnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --use-origin-block
 
+Usage: Predict Plate using LPRNet+STNet:
+    $ python predict_plate.py lprnet_plus_stnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --add-stnet
+
 """
 
 import os
@@ -65,6 +68,7 @@ def parse_opt():
 
     parser.add_argument("--use-lprnet", action='store_true', help='use LPRNet instead of CRNN')
     parser.add_argument("--use-origin-block", action='store_true', help='use origin small_basic_block impl')
+    parser.add_argument("--add-stnet", action='store_true', help='add STNet for training and evaluation')
 
     parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
     parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
@@ -125,7 +129,8 @@ def main():
         img_h = 48
     model, device = load_ocr_model(pretrained=args.pretrained, shape=(1, 3, img_h, img_w), num_classes=len(PLATE_CHARS),
                                    not_tiny=args.not_tiny, use_lstm=args.use_lstm,
-                                   use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block)
+                                   use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block,
+                                   add_stnet=args.add_stnet)
 
     # Predict
     pred_plate, _ = predict_plate(image=image, model=model, device=device, img_h=img_h, img_w=img_w)

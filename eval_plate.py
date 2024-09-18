@@ -14,6 +14,9 @@ Usage - Single-GPU eval using LPRNet:
     $ python3 eval_plate.py lprnet_plus-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet
     $ python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block
 
+Usage - Single-GPU eval using LPRNet+STNet:
+    $ python3 eval_plate.py lprnet_plus_stnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --add-stnet
+
 Usage - Specify which dataset to evaluate:
     $ python3 eval_plate.py crnn-plate.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2019
     $ python3 eval_plate.py crnn-plate.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2020
@@ -43,6 +46,7 @@ def parse_opt():
 
     parser.add_argument("--use-lprnet", action='store_true', help='use LPRNet instead of CRNN')
     parser.add_argument("--use-origin-block", action='store_true', help='use origin small_basic_block impl')
+    parser.add_argument("--add-stnet", action='store_true', help='add STNet for training and evaluation')
 
     parser.add_argument('--only-ccpd2019', action='store_true', help='only eval CCPD2019/test dataset')
     parser.add_argument('--only-ccpd2020', action='store_true', help='only eval CCPD2019/test dataset')
@@ -64,7 +68,7 @@ def val(args, val_root, pretrained):
         img_h = 48
     model, device = load_ocr_model(pretrained=pretrained, shape=(1, 3, img_h, img_w), num_classes=len(PLATE_CHARS),
                                    not_tiny=args.not_tiny, use_lstm=args.use_lstm,
-                                   use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block)
+                                   use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block, add_stnet=args.add_stnet)
 
     val_dataset = PlateDataset(val_root, is_train=False, input_shape=(img_w, img_h), only_ccpd2019=args.only_ccpd2019,
                                only_ccpd2020=args.only_ccpd2020, only_others=args.only_others)
