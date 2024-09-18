@@ -15,7 +15,7 @@ Usage - Single-GPU training using LPRNet:
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet-plate-b512/ --batch-size 512 --device 0 --use-lprnet --use-origin-block
 
 Usage - Single-GPU training using LPRNet+STNet:
-    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet_plus-plate-b512/ --batch-size 512 --device 0 --use-lprnet --add-stnet
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet_plus_stnet-plate-b512/ --batch-size 512 --device 0 --use-lprnet --add-stnet
 
 """
 
