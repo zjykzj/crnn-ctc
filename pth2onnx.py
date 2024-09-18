@@ -7,8 +7,8 @@
 @Description:
 
 Usage: Pytorch to ONNX:
-    $ python3 pth2onnx.py ./crnn_tiny-emnist.pth ./runs/crnn_tiny-emnist.onnx
-    $ python3 pth2onnx.py ./crnn_tiny-plate.pth ./runs/crnn_tiny-plate.onnx
+    $ python3 pth2onnx.py crnn_tiny-emnist.pth crnn_tiny-emnist.onnx
+    $ python3 pth2onnx.py crnn_tiny-plate.pth crnn_tiny-plate.onnx
 
 """
 
@@ -35,9 +35,6 @@ def parse_opt():
 
     parser.add_argument('--use-lstm', action='store_true', help='use nn.LSTM instead of nn.GRU')
     parser.add_argument('--not-tiny', action='store_true', help='Use this flag to specify non-tiny mode')
-
-    parser.add_argument("--use-lprnet", action='store_true', help='use LPRNet instead of CRNN')
-    parser.add_argument("--use-origin-block", action='store_true', help='use origin small_basic_block impl')
 
     args = parser.parse_args()
     print(f"args: {args}")
@@ -109,10 +106,7 @@ def main(args):
     # UserWarning: Exporting a model to ONNX with a batch_size other than 1, with a variable length with GRU can cause an error when running the ONNX model with a different batch size.
     # Make sure to save the model with a batch size of 1, or define the initial states (h0/c0) as inputs of the model.
     if 'plate' in os.path.basename(args.pretrained):
-        if args.use_lprnet:
-            shape = (1, 3, 24, 94)
-        else:
-            shape = (1, 3, 48, 168)
+        shape = (1, 3, 48, 168)
         num_classes = len(PLATE_CHARS)
     else:
         shape = (1, 1, 32, 160)
@@ -120,8 +114,7 @@ def main(args):
 
     model, _ = load_ocr_model(pretrained=args.pretrained, device=torch.device("cpu"),
                               shape=shape, num_classes=num_classes,
-                              not_tiny=args.not_tiny, use_lstm=args.use_lstm,
-                              use_lprnet=args.use_lprnet, use_origin_block=args.use_origin_block)
+                              not_tiny=args.not_tiny, use_lstm=args.use_lstm)
 
     onnx_path = args.save
     export_to_onnx(model, shape=shape, onnx_path=onnx_path, is_dynamic=False)
