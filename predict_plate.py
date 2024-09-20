@@ -6,15 +6,15 @@
 @author: zj
 @description:
 
-Usage: Predict Plate using CRNN:
+Usage: Predict Plate using CRNN_Tiny/CRNN:
     $ python predict_plate.py crnn_tiny-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
     $ python predict_plate.py crnn-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
 
-Usage: Predict Plate using LPRNet:
+Usage: Predict Plate using LPRNet/LPRNetPlus:
     $ python predict_plate.py lprnet_plus-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet
     $ python predict_plate.py lprnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --use-origin-block
 
-Usage: Predict Plate using LPRNet+STNet:
+Usage: Predict Plate using LPRNet/LPRNetPlus+STNet:
     $ python predict_plate.py lprnet_plus_stnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --add-stnet
 
 """

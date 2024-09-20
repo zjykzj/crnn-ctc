@@ -6,16 +6,17 @@
 @author: zj
 @description:
 
-Usage - Single-GPU eval using CRNN:
+Usage - Single-GPU eval using CRNN_Tiny/CRNN:
     $ python3 eval_plate.py crnn_tiny-plate.pth ../datasets/chinese_license_plate/recog/
     $ python3 eval_plate.py crnn-plate.pth ../datasets/chinese_license_plate/recog/ --not-tiny
 
-Usage - Single-GPU eval using LPRNet:
+Usage - Single-GPU eval using LPRNet/LPRNetPlus:
     $ python3 eval_plate.py lprnet_plus-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet
     $ python3 eval_plate.py lprnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block
 
-Usage - Single-GPU eval using LPRNet+STNet:
+Usage - Single-GPU eval using LPRNet/LPRNetPlus+STNet:
     $ python3 eval_plate.py lprnet_plus_stnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --add-stnet
+    $ python3 eval_plate.py lprnet_stnet-plate.pth ../datasets/chinese_license_plate/recog/ --use-lprnet --use-origin-block --add-stnet
 
 Usage - Specify which dataset to evaluate:
     $ python3 eval_plate.py crnn-plate.pth ../datasets/chinese_license_plate/recog/ --not-tiny --only-ccpd2019

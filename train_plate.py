@@ -6,16 +6,17 @@
 @author: zj
 @description:
 
-Usage - Single-GPU training using CRNN:
+Usage - Single-GPU training using CRNN_Tiny/CRNN:
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn_tiny-plate-b512/ --batch-size 512 --device 0
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-plate-b512/ --batch-size 512 --device 0 --not-tiny
 
-Usage - Single-GPU training using LPRNet:
+Usage - Single-GPU training using LPRNet/LPRNetPlus:
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet_plus-plate-b512/ --batch-size 512 --device 0 --use-lprnet
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet-plate-b512/ --batch-size 512 --device 0 --use-lprnet --use-origin-block
 
-Usage - Single-GPU training using LPRNet+STNet:
+Usage - Single-GPU training using LPRNet/LPRNetPlus+STNet:
     $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet_plus_stnet-plate-b512/ --batch-size 512 --device 0 --use-lprnet --add-stnet
+    $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/lprnet_stnet-plate-b512/ --batch-size 512 --device 0 --use-lprnet --use-origin-block --add-stnet
 
 """
 
