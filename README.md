@@ -49,9 +49,9 @@ For each sub-dataset, the model performance as follows:
 - [Background](#background)
 - [Installation](#installation)
 - [Usage](#usage)
-    - [Train](#train)
-    - [Eval](#eval)
-    - [Predict](#predict)
+  - [Train](#train)
+  - [Eval](#eval)
+  - [Predict](#predict)
 - [Maintainers](#maintainers)
 - [Thanks](#thanks)
 - [Contributing](#contributing)
@@ -61,6 +61,7 @@ For each sub-dataset, the model performance as follows:
 
 | Version                                                          | Release Date | Major Updates                                                                                                                                           |
 |------------------------------------------------------------------|--------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [v1.3.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v1.3.0) | 2024/09/21   | Add **STNet** module to LPRNet/LPRNetPlus and update the training/evaluation/prediction results on the CCPD dataset.                                    |
 | [v1.2.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v1.2.0) | 2024/09/17   | Create a new **LPRNet/LPRNetPlus** model and update the training/evaluation/prediction results on the CCPD dataset.                                     |
 | [v1.1.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v1.1.0) | 2024/08/17   | Update EVAL/PREDICT implementation, support Pytorch format model conversion to ONNX, and finally provide online demo based on Gradio.                   |
 | [v1.0.0](https://github.com/zjykzj/crnn-ctc/releases/tag/v1.0.0) | 2024/08/04   | Optimize the CRNN architecture while achieving super lightweight **CRNN_Tiny**. <br>In addition, all training scripts support mixed precision training. |
