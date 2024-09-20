@@ -16,6 +16,7 @@ Usage: Predict Plate using LPRNet/LPRNetPlus:
 
 Usage: Predict Plate using LPRNet/LPRNetPlus+STNet:
     $ python predict_plate.py lprnet_plus_stnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --add-stnet
+    $ python predict_plate.py lprnet_stnet-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --use-lprnet --use-origin-block --add-stnet
 
 """
 
