@@ -98,51 +98,51 @@ $ python3 train_plate.py ../datasets/chinese_license_plate/recog/ ./runs/crnn-pl
 
 ```shell
 # EMNIST
-$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn_tiny-emnist.pth ../datasets/emnist/
-args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist.pth', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: crnn_tiny-emnist.pth
-crnn_tiny-emnist summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
-Batch:1562 ACC:100.000: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1563/1563 [00:19<00:00, 80.29it/s]
-ACC:98.278
+$ CUDA_VISIBLE_DEVICES=0 python eval_emnist.py crnn-emnist.pth ../datasets/emnist/ --not-tiny
+args: Namespace(not_tiny=True, pretrained='crnn-emnist.pth', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: crnn-emnist.pth
+crnn-emnist summary: 29 layers, 7924363 parameters, 7924363 gradients, 2.2 GFLOPs
+Batch:49999 ACC:100.000: 100%|████████████████████████████████████████████████████████| 50000/50000 [03:47<00:00, 219.75it/s]
+ACC:98.570
 # Plate
-$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py crnn_tiny-plate.pth ../datasets/chinese_license_plate/recog/
-args: Namespace(not_tiny=False, only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='crnn_tiny-plate.pth', use_lprnet=False, use_lstm=False, use_origin_block=False, val_root='../datasets/chinese_license_plate/recog/')
-Loading CRNN pretrained: crnn_tiny-plate.pth
-crnn_tiny-plate summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
+$ CUDA_VISIBLE_DEVICES=0 python3 eval_plate.py crnn-plate.pth ../datasets/chinese_license_plate/recog/ --not-tiny
+args: Namespace(add_stnet=False, not_tiny=True, only_ccpd2019=False, only_ccpd2020=False, only_others=False, pretrained='crnn-plate.pth', use_lprnet=False, use_lstm=False, use_origin_block=False, val_root='../datasets/chinese_license_plate/recog/')
+Loading CRNN pretrained: crnn-plate.pth
+crnn-plate summary: 29 layers, 15083854 parameters, 15083854 gradients, 4.0 GFLOPs
 Load test data: 149002
-Batch:4656 ACC:100.000: 100%|███████████████████████████████████████████████████████████| 4657/4657 [00:36<00:00, 125.99it/s]
-ACC:76.590
+Batch:4656 ACC:100.000: 100%|████████████████████████████████████████████████████████████| 4657/4657 [00:52<00:00, 89.13it/s]
+ACC:82.147
 ```
 
 ### Predict
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python predict_emnist.py crnn_tiny-emnist.pth ../datasets/emnist/ ./runs/predict/emnist/
-args: Namespace(not_tiny=False, pretrained='crnn_tiny-emnist.pth', save_dir='./runs/predict/emnist/', use_lstm=False, val_root='../datasets/emnist/')
-Loading CRNN pretrained: crnn_tiny-emnist.pth
-crnn_tiny-emnist summary: 22 layers, 427467 parameters, 427467 gradients, 0.1 GFLOPs
-Label: [3 8 5 8 5] Pred: [3 8 5 8 5]
-Label: [4 8 6 8 0] Pred: [4 8 6 8 0]
-Label: [4 6 4 7 0] Pred: [4 6 4 7 0]
-Label: [2 3 5 0 7] Pred: [2 3 5 0 7]
-Label: [4 7 8 4 6] Pred: [4 7 8 4 6]
-Label: [0 1 4 3 6] Pred: [0 1 4 3 6]
+$ CUDA_VISIBLE_DEVICES=0 python predict_emnist.py crnn-emnist.pth ../datasets/emnist/ ./runs/predict/emnist/ --not-tiny
+args: Namespace(not_tiny=True, pretrained='crnn-emnist.pth', save_dir='./runs/predict/emnist/', use_lstm=False, val_root='../datasets/emnist/')
+Loading CRNN pretrained: crnn-emnist.pth
+crnn-emnist summary: 29 layers, 7924363 parameters, 7924363 gradients, 2.2 GFLOPs
+Label: [0 4 2 4 7] Pred: [0 4 2 4 7]
+Label: [2 0 6 5 4] Pred: [2 0 6 5 4]
+Label: [7 3 9 9 5] Pred: [7 3 9 9 5]
+Label: [9 6 6 0 9] Pred: [9 6 6 0 9]
+Label: [2 3 0 7 6] Pred: [2 3 0 7 6]
+Label: [6 5 9 5 2] Pred: [6 5 9 5 2]
 ```
 
 ![](assets/predict/emnist/predict_emnist.jpg)
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn_tiny-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/
-args: Namespace(image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=False, pretrained='crnn_tiny-plate.pth', save_dir='runs/predict/plate/', use_lprnet=False, use_lstm=False, use_origin_block=False)
-Loading CRNN pretrained: crnn_tiny-plate.pth
-crnn_tiny-plate summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
-Pred: 宁A·87J92 - Predict time: 3.7 ms
+$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn-plate.pth ./assets/plate/宁A87J92_0.jpg runs/predict/plate/ --not-tiny
+args: Namespace(add_stnet=False, image_path='./assets/plate/宁A87J92_0.jpg', not_tiny=True, pretrained='crnn-plate.pth', save_dir='runs/predict/plate/', use_lprnet=False, use_lstm=False, use_origin_block=False)
+Loading CRNN pretrained: crnn-plate.pth
+crnn-plate summary: 29 layers, 15083854 parameters, 15083854 gradients, 4.0 GFLOPs
+Pred: 宁A·87J92 - Predict time: 5.4 ms
 Save to runs/predict/plate/plate_宁A87J92_0.jpg
-$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn_tiny-plate.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/
-args: Namespace(image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=False, pretrained='crnn_tiny-plate.pth', save_dir='runs/predict/plate/', use_lprnet=False, use_lstm=False, use_origin_block=False)
-Loading CRNN pretrained: crnn_tiny-plate.pth
-crnn_tiny-plate summary: 22 layers, 1042318 parameters, 1042318 gradients, 0.3 GFLOPs
-Pred: 川A·3X7J1 - Predict time: 3.5 ms
+$ CUDA_VISIBLE_DEVICES=0 python predict_plate.py crnn-plate.pth ./assets/plate/川A3X7J1_0.jpg runs/predict/plate/ --not-tiny
+args: Namespace(add_stnet=False, image_path='./assets/plate/川A3X7J1_0.jpg', not_tiny=True, pretrained='crnn-plate.pth', save_dir='runs/predict/plate/', use_lprnet=False, use_lstm=False, use_origin_block=False)
+Loading CRNN pretrained: crnn-plate.pth
+crnn-plate summary: 29 layers, 15083854 parameters, 15083854 gradients, 4.0 GFLOPs
+Pred: 川A·3X7J1 - Predict time: 4.7 ms
 Save to runs/predict/plate/plate_川A3X7J1_0.jpg
 ```
 
