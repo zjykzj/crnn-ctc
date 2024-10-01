@@ -72,7 +72,11 @@ For each sub-dataset, the model performance as follows:
 ## Background
 
 This warehouse aims to better understand and apply CRNN+CTC, and currently achieves digital recognition and license
-plate recognition
+plate recognition. Related papers:
+
+1. [An End-to-End Trainable Neural Network for Image-based Sequence Recognition and Its Application to Scene Text Recognition](https://arxiv.org/abs/1507.05717)
+2. [Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks](https://www.cs.toronto.edu/~graves/icml_2006.pdf)
+3. [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447)
 
 ## Installation
 
