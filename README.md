@@ -71,12 +71,20 @@ For each sub-dataset, the model performance as follows:
 
 ## Background
 
-This warehouse aims to better understand and apply CRNN+CTC, and currently achieves digital recognition and license
-plate recognition. Related papers:
+This warehouse aims to better understand and apply CRNN+CTC, and has currently achieved digital recognition and license plate recognition. Meanwhile, LPRNet(+STNet) is a pure convolutional architecture for license plate recognition network. I believe that the implementation of these algorithms can help with the deployment of license plate recognition algorithms, such as on edge devices.
 
-1. [An End-to-End Trainable Neural Network for Image-based Sequence Recognition and Its Application to Scene Text Recognition](https://arxiv.org/abs/1507.05717)
-2. [Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks](https://www.cs.toronto.edu/~graves/icml_2006.pdf)
-3. [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447)
+Relevant papers include:
+
+1. [Towards End-to-End License Plate Detection and Recognition: A Large Dataset and Baseline](https://openaccess.thecvf.com/content_ECCV_2018/papers/Zhenbo_Xu_Towards_End-to-End_License_ECCV_2018_paper.pdf)
+2. [An End-to-End Trainable Neural Network for Image-based Sequence Recognition and Its Application to Scene Text Recognition](https://arxiv.org/abs/1507.05717)
+3. [Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks](https://www.cs.toronto.edu/~graves/icml_2006.pdf)
+4. [LPRNet: License Plate Recognition via Deep Neural Networks](https://arxiv.org/abs/1806.10447)
+
+Relevant blogs (*Chinese*):
+
+1. [Towards End-to-End License Plate Detection and Recognition: A Large Dataset and Baseline](https://blog.zjykzj.cn/posts/e3db0e3d.html)
+2. [An End-to-End Trainable Neural Network for Image-based Sequence Recognition and Its Application to Scene Text Recognition](https://blog.zjykzj.cn/posts/a25a6bef.html)
+3. [LPRNet: License Plate Recognition via Deep Neural Networks](https://blog.zjykzj.cn/posts/c9eab5b1.html)
 
 ## Installation
 
