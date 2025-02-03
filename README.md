@@ -42,6 +42,8 @@ For each sub-dataset, the model performance as follows:
 | **LPRNetPlus+STNet** |             72.125             |     141,982      |             90.611             |      5,006       |
 |   **LPRNet+STNet**   |             71.291             |     141,982      |             89.832             |      5,006       |
 
+***If you want to achieve license plate detection, segmentation, and recognition simultaneously, please refer to [zjykzj/LPDet](https://github.com/zjykzj/LPDet).***
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
