@@ -140,7 +140,7 @@ class PlateDataset(Dataset):
         img_path, label_name = self.data_list[index]
         image = Image.open(img_path)
 
-        return image, label_name
+        return image, label_name, img_path
 
     def __len__(self):
         return self.dataset_len

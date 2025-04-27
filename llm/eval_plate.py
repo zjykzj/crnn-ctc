@@ -7,23 +7,24 @@
 @Description:
 
 Usage - Eval using Ollama_with_MiniCPM-V:
-    $ python3 eval_plate.py ../datasets/chinese_license_plate/recog/
+    $ python3 llm/eval_plate.py ../datasets/chinese_license_plate/recog/
 
 Usage - Specify which dataset to evaluate:
-    $ python3 eval_plate.py ../datasets/chinese_license_plate/recog/ --only-ccpd2019
-    $ python3 eval_plate.py ../datasets/chinese_license_plate/recog/ --only-ccpd2020
-    $ python3 eval_plate.py ../datasets/chinese_license_plate/recog/ --only-others
+    $ python3 llm/eval_plate.py ../datasets/chinese_license_plate/recog/ --only-ccpd2019
+    $ python3 llm/eval_plate.py ../datasets/chinese_license_plate/recog/ --only-ccpd2020
+    $ python3 llm/eval_plate.py ../datasets/chinese_license_plate/recog/ --only-others
 
 === 验证结果 ===
 总样本数: 5006
-正确样本数: 2801
-准确率: 55.95%
-总耗时: 2563.55 秒
-平均每次预测耗时: 0.51 秒
+正确样本数: 3024
+准确率: 60.41%
+总耗时: 2989.26 秒
+平均每次预测耗时: 0.60 秒
 
 """
 
-import re
+import gc
+import uuid
 import time
 import torch
 import argparse
@@ -31,7 +32,7 @@ import requests
 
 from io import BytesIO
 
-from llm.plate_dataset import PlateDataset, PLATE_CHARS
+from plate_dataset import PlateDataset
 
 # 配置 Ollama API 地址
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
@@ -60,39 +61,49 @@ def encode_image(image):
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
+def clean_license_plate(text):
+    """
+    清理 API 返回结果，提取并标准化车牌号码。
+    支持清除中间的点（·）、连字符（-）、空格、引号等，并验证车牌号码格式。
+    """
+    # 去除所有特殊符号和空格
+    cleaned_text = text.replace("·", "").replace("-", "").replace(" ", "").replace('"', '').replace("。", "").strip()
+    return cleaned_text
+
+
 def query_ollama_with_image(image, prompt, model="minicpm-v:latest"):
     """
     向 Ollama 发送图像和文本提示，获取生成结果。
+    匹配 ChatBox 的配置：temperature=0.7, top_p=1。
     """
-    # 编码图像为 Base64
+    unique_id = str(uuid.uuid4())
+    prompt_with_id = f"{prompt} [Request ID: {unique_id}]"
     image_base64 = encode_image(image)
 
-    # 构造请求数据
     payload = {
-        "model": model,  # 替换为你的多模态模型名称
-        "prompt": prompt,
-        "images": [image_base64],  # 图像列表
-        "stream": False
+        "model": model,
+        "prompt": prompt_with_id,
+        "images": [image_base64],
+        "stream": False,
+        "temperature": 0.7,
+        "top_p": 1.0,
+        "max_tokens": 50,
     }
 
-    # 发送 POST 请求
-    response = requests.post(OLLAMA_API_URL, json=payload)
-    if response.status_code == 200:
-        return response.json().get("response", "")
-    else:
-        raise Exception(f"Error: {response.status_code}, {response.text}")
+    headers = {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
+    }
 
-
-def clean_license_plate(plate):
-    """
-    清理车牌号码，移除间隔点或其他非必要字符。
-
-    :param plate: 原始车牌号码（可能包含间隔点）
-    :return: 清理后的车牌号码
-    """
-    # 使用正则表达式移除非字母数字字符
-    cleaned_plate = re.sub(r"[^\w]", "", plate)
-    return cleaned_plate
+    try:
+        response = requests.post(OLLAMA_API_URL, headers=headers, json=payload)
+        response.raise_for_status()
+        raw_response = response.json().get("response", "")
+        del image_base64  # 删除已使用的变量
+        gc.collect()
+        return clean_license_plate(raw_response)
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Request failed: {e}")
 
 
 @torch.no_grad()
@@ -105,28 +116,50 @@ def val(args, val_root):
 
     prompt = """
     任务：识别图像中的车牌号码。
+    示例：
+    - 输入：图像中显示车牌为“沪DH5311”。
+    - 输出：沪DH5311
+    - 输入：图像中显示车牌为“皖AD16558”。
+    - 输出：皖AD16558
     要求：
-    - 只返回车牌号码，不包含任何其他说明、解释或额外信息。
-    - 车牌号码必须符合以下格式：
-      - 一个汉字（代表省份或直辖市），后跟随字母和数字。
-      - 示例格式：沪DH5311 / 皖AD62388 / 皖ADT1060
-    - 如果无法识别车牌，请返回 "无法识别"。
-    - 不要在输出中包含任何标点符号、空格或其他无关字符。
-
-    请根据上述要求处理图像，并直接返回车牌号码。
+    - 每次请求是一个独立任务，无需参考之前的对话或上下文。
+    - 只返回车牌号码，不要包含任何其他文字、标点符号或空格。
+    - 如果图像中的车牌号码模糊不清或被遮挡，也请直接返回“无法识别”。
     """
+    # prompt = """
+    # 任务：识别图像中的车牌号码。
+    #
+    # 示例：
+    # - 输入：图像中显示车牌为“沪DH5311”。
+    # - 输出：沪DH5311
+    #
+    # - 输入：图像中显示车牌为“皖AD16558”。
+    # - 输出：皖AD16558
+    #
+    # 要求：
+    # - 每次请求是一个独立任务，无需参考之前的对话或上下文。
+    # - 只返回车牌号码，不要包含任何其他文字、标点符号或空格。
+    # - 车牌号码的格式必须是一个汉字 + 字母 + 数字（如“沪DH5311”）。
+    # - 如果图像中没有清晰的车牌号码，请直接返回“无法识别”。
+    # - 如果图像中的车牌号码模糊不清或被遮挡，也请直接返回“无法识别”。
+    #
+    # 重要规则：
+    # - 不要尝试猜测或生成可能的车牌号码。
+    # - 输出结果必须完全符合上述格式要求。
+    #
+    # 请根据上述要求处理图像，并直接返回车牌号码。
+    # """
     # 记录总时间
     start_time = time.time()
     for idx in range(total_num):
         # 获取图像和真实标签
-        image, label_name = val_dataset.__getitem__(idx)
+        image, label_name, img_path = val_dataset.__getitem__(idx)
 
         # 开始单次预测计时
         single_start_time = time.time()
 
         # 查询 Ollama 模型进行预测
         pred_plate = query_ollama_with_image(image, prompt)
-        pred_plate = clean_license_plate(pred_plate)
 
         # 单次预测结束计时
         single_end_time = time.time()
@@ -139,7 +172,7 @@ def val(args, val_root):
 
         print(
             f"[{idx + 1}/{total_num}] "
-            f"Pred: {pred_plate} | Label: {label_name} | "
+            f"Pred: {pred_plate} | Label: {label_name} | img_path: {img_path} | "
             f"Correct: {is_correct} | Time: {single_duration:.2f}s"
         )
 
