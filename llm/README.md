@@ -9,12 +9,12 @@ The evaluation script `eval_plate.py` supports Ollama and vLLM backends, multi-t
 | Model | Params | Accuracy | Unrecognized (null) | Throughput (img/s) | Avg Latency (ms) | Workers |
 |---|---|---|---|---|---|---|
 | Qwen/Qwen3.5-2B | 2B | **86.52%** | 50 | 4.94 | 890.0 | 4 |
-| ZhipuAI/GLM-OCR | 0.3B | 85.38% | **0** | **23.98** | **382.8** | 8 |
+| ZhipuAI/GLM-OCR | 0.9B | 85.38% | **0** | **23.98** | **382.8** | 8 |
 | Qwen/Qwen3-VL-2B-Instruct | 2B | 83.62% | 109 | 5.08 | 3265.3 | 16 |
 
 > **Summary:**
 > - **Qwen3.5-2B** achieves the highest accuracy (86.52%), ideal for accuracy-critical scenarios.
-> - **GLM-OCR** is the fastest (23.98 img/s, 382.8ms latency) with zero null outputs — best for high-throughput, low-latency use cases. Only 0.3B parameters, outstanding cost-effectiveness.
+> - **GLM-OCR** is the fastest (23.98 img/s, 382.8ms latency) with zero null outputs — best for high-throughput, low-latency use cases. Only 0.9B parameters, outstanding cost-effectiveness.
 > - **Qwen3-VL-2B-Instruct** has lower accuracy and high latency (3.3s/image); not recommended when better alternatives exist.
 
 ## Evaluation Environment
@@ -98,7 +98,7 @@ Avg latency:        890.0 ms
 
 ## ZhipuAI/GLM-OCR
 
-Zhipu OCR-specialized model, only 0.3B parameters. Fastest inference, zero null outputs, outstanding cost-effectiveness.
+Zhipu OCR-specialized model, only 0.9B parameters. Fastest inference, zero null outputs, outstanding cost-effectiveness.
 
 ### Start vLLM
 
