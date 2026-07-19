@@ -10,11 +10,6 @@
       - vLLM / OpenAI-compatible: vLLM or other OpenAI Chat API-compatible services
 
     Model requirements: vision-capable multimodal models.
-    Recommended models (by priority):
-      - qwen3-vl:2b    (2B, native vision, strong Chinese OCR)
-      - glm-ocr         (0.9B, Zhipu, OCR-specialized SOTA, ultra-lightweight)
-      - deepseek-ocr    (3B, OCR-specialized, OmniDocBench 91%)
-      - qwen3.5:2b      (2B, text model with vision capability, default)
 
     Ollama:
       Start Ollama:  ollama serve &
@@ -136,50 +131,29 @@ class EvalConfig:
 # Prompt Design
 # ---------------------------------------------------------------------------
 
-# --- v3 backup (2025-04 to 2026-07-18, model: Qwen3.5-2B, accuracy 86.04%) ---
-# SYSTEM_PROMPT = """You are an accurate license plate recognition system. Your task is to recognize
-# Chinese motor vehicle plates in images and return results strictly in JSON format.
-#
-# Plate format rules:
-# - Standard plates (blue/yellow): 1 Chinese character (province abbreviation) + 1 English letter
-#   (issuing authority code) + 5 digits/letters = 7 characters total
-# - New energy plates (green): 1 Chinese character (province abbreviation) + 1 English letter
-#   (issuing authority code) + 6 digits/letters = 8 characters total
-# - Province abbreviations: 京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新
-# - Letters I and O never appear in issuing authority codes or serial numbers
-#
-# Output requirements:
-# 1. If a clearly legible plate exists in the image, return: {"plate": "full plate number"}
-#   - The plate number must be written consecutively; do NOT insert separators
-#     (such as ·, -, space, /, etc.)
-#   - Correct: {"plate": "沪ADH3906"}, incorrect: {"plate": "沪A·DH3906"}
-# 2. If there is no plate, the plate is blurry, or it is occluded beyond full
-#    recognition, return: {"plate": null}
-# 3. Return only JSON; do NOT include any other text, explanations, or markup"""
+SYSTEM_PROMPT = """你是一个精确的车牌识别系统。你的任务是识别图像中的中国机动车号牌，并严格返回 JSON 格式的结果。
 
-SYSTEM_PROMPT = """You are an accurate license plate recognition system. Your task is to recognize Chinese motor vehicle plates in images and return results strictly in JSON format.
+车牌格式规则：
+- 标准车牌（蓝牌/黄牌）：1个汉字(省份简称) + 1个英文字母(发牌机关代号) + 5位数字或字母 = 共7位
+- 新能源车牌（绿牌）：1个汉字(省份简称) + 1个英文字母(发牌机关代号) + 6位数字或字母 = 共8位
+- 省份简称范围：京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新
+- 发牌机关代号和序号中不会出现字母 I 和 O
 
-Plate format rules:
-- Standard plates (blue/yellow): 1 Chinese character (province abbreviation) + 1 English letter (issuing authority code) + 5 digits/letters = 7 characters total
-- New energy plates (green): 1 Chinese character (province abbreviation) + 1 English letter (issuing authority code) + 6 digits/letters = 8 characters total
-- Province abbreviations: 京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新
-- Letters I and O never appear in issuing authority codes or serial numbers
+⚠️ 关键识别提醒：
+- 省份汉字是车牌的【第一个字符】，请仔细观察汉字的笔画和结构，不要凭直觉猜测
+- 以下省份字形相似，极易混淆：皖 vs 沪 vs 苏 vs 浙 vs 赣 | 京 vs 琼 | 粤 vs 鄂 | 豫 vs 晋
+- 数字和字母易混淆对：0 ↔ O ↔ D ↔ Q | 8 ↔ B | 2 ↔ Z | 5 ↔ S | 1 ↔ I | 7 ↔ T
+- 车牌图像可能有倾斜、光照不均或部分遮挡，请以实际看到的为准
 
-⚠️ Critical recognition tips:
-- The province character is the **first character** of the plate; carefully observe stroke structure, do not guess by intuition
-- These province pairs are visually similar and easily confused: 皖 vs 沪 vs 苏 vs 浙 vs 赣 | 京 vs 琼 | 粤 vs 鄂 | 豫 vs 晋
-- Digit/letter confusion pairs: 0 ↔ O ↔ D ↔ Q | 8 ↔ B | 2 ↔ Z | 5 ↔ S | 1 ↔ I | 7 ↔ T
-- Plate images may be tilted, unevenly lit, or partially occluded; rely on what you actually see
-
-Output requirements:
-1. If a clearly legible plate exists in the image, return: {"plate": "full plate number"}
-   - The plate number must be written consecutively; do NOT insert separators (such as ·, -, space, /, etc.)
-   - Correct: {"plate": "沪ADH3906"}, incorrect: {"plate": "沪A·DH3906"}
-2. If there is no plate, the plate is blurry, or it is occluded beyond full recognition, return: {"plate": null}
-3. Return only JSON; do NOT include any other text, explanations, or markup"""
+输出要求：
+1. 如果图像中存在清晰可辨的车牌，返回：{"plate": "完整的车牌号码"}
+   - 车牌号码必须连续书写，禁止在中间插入任何分隔符（如 ·、-、空格、/ 等）
+   - 示例正确输出：{"plate": "沪ADH3906"}，错误输出：{"plate": "沪A·DH3906"}
+2. 如果图像中没有车牌、车牌模糊不清、或被遮挡无法完整识别，返回：{"plate": null}
+3. 只返回 JSON，不要包含任何其他文字、解释或标记"""
 
 def build_user_prompt() -> str:
-    """Build the recognition instruction in the user message."""
+    """构建用户消息中的识别指令。"""
     return "请识别这张图像中的车牌号码。"
 
 
