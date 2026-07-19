@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-对 eval_plate.py 保存的结果 JSON 进行重新分析：
-- 应用 clean_plate 清洗分隔符
-- 对比清洗前后的准确率
-- 输出修复了多少条
+Re-analyze a result JSON saved by eval_plate.py:
+- Apply clean_plate to strip separators
+- Compare accuracy before/after cleaning
+- Report how many samples were fixed
+- Classify remaining errors by type
 """
 
 import json
@@ -11,7 +12,7 @@ import re
 import sys
 from typing import Optional
 
-# 所有非车牌字符
+# All non-plate characters
 _NON_PLATE_RE = re.compile(
     r'[^京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新'
     r'A-Za-z0-9]'
@@ -39,9 +40,9 @@ def main():
 
     before_correct = 0
     after_correct = 0
-    fixed_by_clean = 0  # 清洗前错，清洗后对
-    still_wrong = 0     # 清洗后仍然错
-    became_wrong = 0    # 清洗前对，清洗后错（理论上不应该发生）
+    fixed_by_clean = 0  # wrong before, right after cleaning
+    still_wrong = 0     # still wrong after cleaning
+    became_wrong = 0    # right before, wrong after cleaning (should not happen)
     fixed_examples = []
     still_wrong_examples = []
 
@@ -69,12 +70,12 @@ def main():
         elif raw_correct and not cleaned_correct:
             became_wrong += 1
 
-    # 分类 still_wrong 的错误类型
-    separator_errors = 0      # 清洗后还有分隔符
-    length_errors = 0         # 长度不匹配
-    char_errors = 0           # 字符错误
-    province_errors = 0       # 省份错误
-    null_errors = 0           # 预测为 null
+    # Classify error types among still-wrong samples
+    separator_errors = 0      # separator still present after cleaning
+    length_errors = 0         # length mismatch
+    char_errors = 0           # character error
+    province_errors = 0       # province mistake
+    null_errors = 0           # predicted as null
 
     for _, label, raw, cleaned in still_wrong_examples:
         if cleaned is None:
@@ -89,32 +90,32 @@ def main():
             char_errors += 1
 
     print(f"{'='*60}")
-    print(f"文件: {json_path}")
-    print(f"总样本: {total}")
+    print(f"File: {json_path}")
+    print(f"Total samples: {total}")
     print()
-    print(f"=== 准确率对比 ===")
-    print(f"清洗前: {before_correct}/{total} = {before_correct/total*100:.2f}%")
-    print(f"清洗后: {after_correct}/{total} = {after_correct/total*100:.2f}%")
-    print(f"提升:   +{(after_correct - before_correct)/total*100:.2f}%")
+    print(f"=== Accuracy Comparison ===")
+    print(f"Before cleaning: {before_correct}/{total} = {before_correct/total*100:.2f}%")
+    print(f"After cleaning:  {after_correct}/{total} = {after_correct/total*100:.2f}%")
+    print(f"Improvement:     +{(after_correct - before_correct)/total*100:.2f}%")
     print()
-    print(f"=== 变化明细 ===")
-    print(f"清洗修复:      {fixed_by_clean} 条（分隔符导致错误 → 清洗后正确）")
-    print(f"仍然错误:      {still_wrong} 条")
-    print(f"清洗破坏:      {became_wrong} 条（不应发生）")
+    print(f"=== Breakdown ===")
+    print(f"Fixed by cleaning:     {fixed_by_clean} samples (separator error → correct)")
+    print(f"Still wrong:           {still_wrong} samples")
+    print(f"Broken by cleaning:    {became_wrong} samples (should not happen)")
     print()
     if still_wrong > 0:
-        print(f"=== 仍错误样本的错误类型（采样 {min(30, len(still_wrong_examples))} 条） ===")
-        print(f"  分隔符残留:   {separator_errors}")
-        print(f"  长度不匹配:   {length_errors}")
-        print(f"  省份错误:     {province_errors}")
-        print(f"  字符错误:     {char_errors}")
-        print(f"  预测为 null:  {null_errors}")
+        print(f"=== Still-wrong error types (sampled {min(30, len(still_wrong_examples))}) ===")
+        print(f"  Separator residue:  {separator_errors}")
+        print(f"  Length mismatch:    {length_errors}")
+        print(f"  Province error:     {province_errors}")
+        print(f"  Character error:    {char_errors}")
+        print(f"  Predicted null:     {null_errors}")
     print()
-    print(f"=== 清洗修复样例（前 15 条） ===")
+    print(f"=== Fixed by cleaning (first 15) ===")
     for path, label, raw, cleaned in fixed_examples[:15]:
         print(f"  {raw} → {cleaned}  (label: {label})  {path.split('/')[-1]}")
     print()
-    print(f"=== 仍然错误样例（前 15 条） ===")
+    print(f"=== Still wrong (first 15) ===")
     for path, label, raw, cleaned in still_wrong_examples[:15]:
         print(f"  pred: {cleaned}  label: {label}  raw: {raw}  {path.split('/')[-1]}")
     print(f"{'='*60}")

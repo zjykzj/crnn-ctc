@@ -1,33 +1,33 @@
-# LLM 车牌识别评估
+# LLM License Plate Recognition Evaluation
 
-使用多模态大模型（vLLM 部署 + OpenAI-compatible Chat API）对中国车牌进行端到端 OCR 识别，在 CCPD2020/test（5006 张）上对比精度与吞吐。
+End-to-end Chinese license plate OCR using multimodal LLMs (vLLM deployment + OpenAI-compatible Chat API). Accuracy and throughput benchmarks on CCPD2020/test (5,006 images).
 
-评估脚本 `eval_plate.py` 支持 Ollama 和 vLLM 两种后端，支持多线程并发，自动重试，结果保存为结构化 JSON。详见 [eval_plate.py](eval_plate.py)。
+The evaluation script `eval_plate.py` supports Ollama and vLLM backends, multi-threaded concurrency, automatic retries, and structured JSON output. See [eval_plate.py](eval_plate.py).
 
-## 模型精度对比
+## Model Accuracy Comparison
 
-| 模型 | 参数量 | 准确率 | 无法识别 (null) | 吞吐 (img/s) | 平均延迟 (ms) | 并发数 |
+| Model | Params | Accuracy | Unrecognized (null) | Throughput (img/s) | Avg Latency (ms) | Workers |
 |---|---|---|---|---|---|---|
 | Qwen/Qwen3.5-2B | 2B | **86.52%** | 50 | 4.94 | 890.0 | 4 |
 | ZhipuAI/GLM-OCR | 0.3B | 85.38% | **0** | **23.98** | **382.8** | 8 |
 | Qwen/Qwen3-VL-2B-Instruct | 2B | 83.62% | 109 | 5.08 | 3265.3 | 16 |
 
-> **结论：**
-> - **Qwen3.5-2B** 精度最高（86.52%），适合对准确率要求严格的场景。
-> - **GLM-OCR** 速度最快（23.98 img/s，延迟 382.8ms），且无 null 输出，适合高吞吐、低延迟场景。参数量仅 0.3B，性价比突出。
-> - **Qwen3-VL-2B-Instruct** 精度较低且延迟高（3.3s/张），在有更好替代方案时不推荐。
+> **Summary:**
+> - **Qwen3.5-2B** achieves the highest accuracy (86.52%), ideal for accuracy-critical scenarios.
+> - **GLM-OCR** is the fastest (23.98 img/s, 382.8ms latency) with zero null outputs — best for high-throughput, low-latency use cases. Only 0.3B parameters, outstanding cost-effectiveness.
+> - **Qwen3-VL-2B-Instruct** has lower accuracy and high latency (3.3s/image); not recommended when better alternatives exist.
 
-## 评估环境
+## Evaluation Environment
 
-- **镜像：** `vllm/vllm-openai:v0.25.1-cu129-ubuntu2404`
-- **GPU：** NVIDIA GeForce RTX 4060 (8GB)
-- **数据集：** CCPD2020/test，5006 张中国车牌图像
-- **Prompt 版本：** v4（含省份相似字形提醒，详见 `eval_plate.py`）
-- **通信协议：** OpenAI-compatible `/v1/chat/completions`，`response_format: json_object`
+- **Image:** `vllm/vllm-openai:v0.25.1-cu129-ubuntu2404`
+- **GPU:** NVIDIA GeForce RTX 4060 (8GB)
+- **Dataset:** CCPD2020/test, 5,006 Chinese license plate images
+- **Prompt version:** v4 (includes province character similarity hints; see `eval_plate.py`)
+- **Protocol:** OpenAI-compatible `/v1/chat/completions`, `response_format: json_object`
 
-## 服务健康检查
+## Health Check
 
-启动 vLLM 服务后，用以下命令验证服务是否就绪：
+After starting the vLLM service, verify it is ready:
 
 ```bash
 curl http://127.0.0.1:13000/v1/chat/completions \
@@ -35,21 +35,21 @@ curl http://127.0.0.1:13000/v1/chat/completions \
   -d '{
     "model": "Qwen3.5-2B",
     "messages": [
-      {"role": "user", "content": "你好，请介绍一下你自己"}
+      {"role": "user", "content": "Hello, please introduce yourself"}
     ],
     "temperature": 0.7
   }'
 ```
 
-将 `model` 替换为实际部署的模型名即可。
+Replace `model` with the actual deployed model name.
 
 ---
 
 ## Qwen/Qwen3.5-2B
 
-纯文本模型，具备视觉理解能力。精度最高，适合对准确率要求严格的场景。
+Text model with vision capability. Highest accuracy, suitable for accuracy-critical scenarios.
 
-### 启动 vLLM
+### Start vLLM
 
 ```bash
 docker run -it --rm \
@@ -70,7 +70,7 @@ docker run -it --rm \
   --max-num-seqs 32
 ```
 
-### 运行评估
+### Run Evaluation
 
 ```bash
 python3 llm/eval_plate.py ../../datasets/chinese_license_plate/recog/ \
@@ -81,26 +81,26 @@ python3 llm/eval_plate.py ../../datasets/chinese_license_plate/recog/ \
   --workers 4
 ```
 
-### 评估结果
+### Results
 
 ```
-总样本数:          5006
-正确样本数:        4331
-准确率:            86.52%
-JSON 解析失败:     0
-无法识别 (null):   50
-请求异常:          0
-总耗时:            1013.62 秒
-平均每次耗时:      890.0 ms
+Total samples:      5006
+Correct:            4331
+Accuracy:           86.52%
+JSON parse failures: 0
+Unrecognized (null): 50
+Request errors:     0
+Total time:         1013.62 s
+Avg latency:        890.0 ms
 ```
 
 ---
 
 ## ZhipuAI/GLM-OCR
 
-智谱 OCR 专项模型，参数量仅 0.3B。速度最快、无 null 输出，性价比突出。
+Zhipu OCR-specialized model, only 0.3B parameters. Fastest inference, zero null outputs, outstanding cost-effectiveness.
 
-### 启动 vLLM
+### Start vLLM
 
 ```bash
 docker run -it --rm \
@@ -123,9 +123,9 @@ docker run -it --rm \
   --max-num-seqs 32
 ```
 
-> **注意：** GLM-OCR 需要额外设置 `VLLM_NO_PIN_MEMORY=1` 和 `VLLM_USE_V2_MODEL_RUNNER=0`，否则可能启动失败。
+> **Note:** GLM-OCR requires `VLLM_NO_PIN_MEMORY=1` and `VLLM_USE_V2_MODEL_RUNNER=0`, otherwise it may fail to start.
 
-### 运行评估
+### Run Evaluation
 
 ```bash
 python3 llm/eval_plate.py ../../datasets/chinese_license_plate/recog/ \
@@ -136,26 +136,26 @@ python3 llm/eval_plate.py ../../datasets/chinese_license_plate/recog/ \
   --workers 8
 ```
 
-### 评估结果
+### Results
 
 ```
-总样本数:          5006
-正确样本数:        4274
-准确率:            85.38%
-JSON 解析失败:     0
-无法识别 (null):   0
-请求异常:          0
-总耗时:            208.80 秒
-平均每次耗时:      382.8 ms
+Total samples:      5006
+Correct:            4274
+Accuracy:           85.38%
+JSON parse failures: 0
+Unrecognized (null): 0
+Request errors:     0
+Total time:         208.80 s
+Avg latency:        382.8 ms
 ```
 
 ---
 
 ## Qwen/Qwen3-VL-2B-Instruct
 
-原生视觉语言模型。精度较低、延迟高，在有更好替代方案时不推荐。
+Native vision-language model. Lower accuracy and high latency; not recommended when better alternatives exist.
 
-### 启动 vLLM
+### Start vLLM
 
 ```bash
 docker run -it --rm \
@@ -180,9 +180,9 @@ docker run -it --rm \
   --mm-processor-kwargs '{"max_pixels": 360000}'
 ```
 
-> **注意：** 该模型需要 `--enforce-eager`（关闭 CUDA Graph，节省显存），`--max-model-len 1024`（车牌 OCR 不涉及长文本），以及限制多模态像素 `max_pixels=360000`。
+> **Note:** This model requires `--enforce-eager` (disables CUDA Graph to save VRAM), `--max-model-len 1024` (license plate OCR does not need long context), and `max_pixels=360000` to limit multimodal pixel processing.
 
-### 运行评估
+### Run Evaluation
 
 ```bash
 python3 llm/eval_plate.py ../../datasets/chinese_license_plate/recog/ \
@@ -193,22 +193,22 @@ python3 llm/eval_plate.py ../../datasets/chinese_license_plate/recog/ \
   --workers 16
 ```
 
-### 评估结果
+### Results
 
 ```
-总样本数:          5006
-正确样本数:        4186
-准确率:            83.62%
-JSON 解析失败:     0
-无法识别 (null):   109
-请求异常:          0
-总耗时:            984.59 秒
-平均每次耗时:      3265.3 ms
+Total samples:      5006
+Correct:            4186
+Accuracy:           83.62%
+JSON parse failures: 0
+Unrecognized (null): 109
+Request errors:     0
+Total time:         984.59 s
+Avg latency:        3265.3 ms
 ```
 
 ---
 
-## 辅助工具
+## Tools
 
-- **`eval_plate.py`** — 主评估脚本，支持 Ollama / vLLM 后端，多线程并发，结果 JSON 输出。运行 `python3 llm/eval_plate.py --help` 查看完整参数。
-- **`reanalyze.py`** — 对已有结果 JSON 进行二次分析：应用 `clean_plate` 清洗分隔符，对比清洗前后准确率，并按错误类型（省份错误、字符错误、长度不匹配等）分类统计。
+- **`eval_plate.py`** — Main evaluation script. Supports Ollama / vLLM backends, multi-threaded concurrency, structured JSON output. Run `python3 llm/eval_plate.py --help` for full usage.
+- **`reanalyze.py`** — Post-hoc analysis of saved result JSONs: applies `clean_plate` separator sanitization, compares accuracy before/after cleaning, and classifies remaining errors (province mismatch, character errors, length mismatch, etc.).

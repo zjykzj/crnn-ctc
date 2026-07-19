@@ -4,25 +4,25 @@
 @Time    : 2025/4/26 15:47
 @File    : eval_plate.py
 @Author  : zj
-@Description: 使用多模态大模型进行车牌识别评估。
-    支持两种后端：
-      - Ollama（默认）：本地 Ollama 服务的 /api/chat 接口
-      - vLLM / OpenAI-compatible：vLLM 或其他兼容 OpenAI Chat API 的服务
+@Description: Evaluate license plate recognition using multimodal LLMs.
+    Supports two backends:
+      - Ollama (default): local Ollama service via /api/chat endpoint
+      - vLLM / OpenAI-compatible: vLLM or other OpenAI Chat API-compatible services
 
-    模型要求：vision-capable 的多模态模型。
-    推荐模型（按优先级）：
-      - qwen3-vl:2b    (2B, 视觉原生, 中文 OCR 强)
-      - glm-ocr         (0.9B, 智谱, OCR 专项 SOTA, 超轻量)
-      - deepseek-ocr    (3B, OCR 专项, OmniDocBench 91%)
-      - qwen3.5:2b      (2B, 文本模型+视觉能力, 默认)
+    Model requirements: vision-capable multimodal models.
+    Recommended models (by priority):
+      - qwen3-vl:2b    (2B, native vision, strong Chinese OCR)
+      - glm-ocr         (0.9B, Zhipu, OCR-specialized SOTA, ultra-lightweight)
+      - deepseek-ocr    (3B, OCR-specialized, OmniDocBench 91%)
+      - qwen3.5:2b      (2B, text model with vision capability, default)
 
     Ollama:
-      启动 Ollama: ollama serve &
-      预热模型:   curl http://localhost:11434/api/chat -d '{"model":"qwen3.5:2b","messages":[{"role":"user","content":"ping"}],"max_tokens":1,"think":false,"stream":false}'
+      Start Ollama:  ollama serve &
+      Warm up model:  curl http://localhost:11434/api/chat -d '{"model":"qwen3.5:2b","messages":[{"role":"user","content":"ping"}],"max_tokens":1,"think":false,"stream":false}'
 
     vLLM:
-      启动 vLLM:  vllm serve Qwen/Qwen3.5-2B --port 13000
-      启动 vLLM (LM Studio):  python -m vllm.entrypoints.openai.api_server --model Qwen3.5-2B --port 8000
+      Start vLLM:  vllm serve Qwen/Qwen3.5-2B --port 13000
+      Start vLLM (LM Studio):  python -m vllm.entrypoints.openai.api_server --model Qwen3.5-2B --port 8000
 
 Usage - Ollama (default):
     $ python3 llm/eval_plate.py ../datasets/chinese_license_plate/recog/
@@ -61,46 +61,47 @@ import requests
 from PIL import Image
 from tqdm import tqdm
 
-# 延迟导入，避免 --help 时依赖 torch
+# Deferred import to avoid requiring torch for --help
 PlateDataset = None
 
 # ---------------------------------------------------------------------------
-# 常量配置
+# Constants
 # ---------------------------------------------------------------------------
 
-# Ollama Chat API 地址
+# Ollama Chat API endpoint
 OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 
-# vLLM / OpenAI-compatible API 默认地址
+# vLLM / OpenAI-compatible API default base URL
 VLLM_DEFAULT_BASE_URL = "http://127.0.0.1:8000"
 
-# vLLM 模型默认名（不带 tag 后缀）
+# vLLM default model name (without tag suffix)
 VLLM_DEFAULT_MODEL = "Qwen3.5-2B"
 
-# 最大重试次数
+# Maximum retry attempts
 MAX_RETRIES = 3
 
-# 单次请求超时（秒）
+# Single request timeout (seconds)
 REQUEST_TIMEOUT = 60
 
-# 模型配置：该模型是否支持 think: false 参数
-# qwen3-vl:2b 有 bug — think: false 会把输出写入 thinking 字段导致 content 为空
-# 匹配规则：按前缀匹配，命中第一个即生效
+# Model config: whether the model supports the `think: false` parameter.
+# qwen3-vl:2b has a bug — `think: false` writes output into the thinking field,
+# leaving content empty.
+# Matching rule: prefix match; first hit wins.
 _MODEL_THINK_CONFIG = {
-    "qwen3-vl": False,      # bug: content 为空
-    "minicpm-v": False,     # 不支持 think 参数
-    # 默认（未命中）: False — 不传 think 参数，安全第一
+    "qwen3-vl": False,      # bug: content is empty
+    "minicpm-v": False,     # does not support think parameter
+    # Default (no match): False — skip think parameter; safety first
 }
 
-# 模型 fallback: 当 content 为空时，是否从 thinking 字段解析
+# Model fallback: when content is empty, whether to parse from thinking field
 _MODEL_FALLBACK_THINKING = {
-    "qwen3-vl": True,       # bug 导致输出在 thinking 里
+    "qwen3-vl": True,       # bug causes output to land in thinking field
 }
 
-# 图片预处理：长边最大像素数
+# Image preprocessing: maximum pixels on the long side
 MAX_IMAGE_SIZE = 1024
 
-# Prompt 版本标识（随 prompt 修改递增，用于结果溯源）
+# Prompt version identifier (incremented with prompt changes for result traceability)
 PROMPT_VERSION = "v4"
 
 
@@ -110,19 +111,19 @@ PROMPT_VERSION = "v4"
 
 @dataclass
 class PlatePrediction:
-    """单次车牌预测的结构化结果"""
-    plate: Optional[str] = None         # 识别出的车牌号，None 表示无法识别
-    raw_response: str = ""              # API 原始返回文本
-    is_valid_json: bool = False         # JSON 解析是否成功
-    error: Optional[str] = None         # 异常信息
+    """Structured result for a single license plate prediction"""
+    plate: Optional[str] = None         # recognized plate number, None means unrecognizable
+    raw_response: str = ""              # raw API response text
+    is_valid_json: bool = False         # whether JSON parsing succeeded
+    error: Optional[str] = None         # exception info
 
 
 @dataclass
 class EvalConfig:
-    """评估配置（保存到结果 JSON 中，便于事后对比）"""
+    """Evaluation config (saved into result JSON for post-hoc comparison)"""
     model: str = ""
     backend: str = "ollama"             # ollama / vllm
-    base_url: str = ""                  # vLLM 时使用
+    base_url: str = ""                  # used for vLLM
     prompt_version: str = ""
     temperature: float = 0.0
     max_image_size: int = MAX_IMAGE_SIZE
@@ -132,48 +133,53 @@ class EvalConfig:
 
 
 # ---------------------------------------------------------------------------
-# Prompt 设计
+# Prompt Design
 # ---------------------------------------------------------------------------
 
-# --- v3 备份（2025-04 至 2026-07-18, model: Qwen3.5-2B, 准确率 86.04%）---
-# SYSTEM_PROMPT = """你是一个精确的车牌识别系统。你的任务是识别图像中的中国机动车号牌，并严格返回 JSON 格式的结果。
+# --- v3 backup (2025-04 to 2026-07-18, model: Qwen3.5-2B, accuracy 86.04%) ---
+# SYSTEM_PROMPT = """You are an accurate license plate recognition system. Your task is to recognize
+# Chinese motor vehicle plates in images and return results strictly in JSON format.
 #
-# 车牌格式规则：
-# - 标准车牌（蓝牌/黄牌）：1个汉字(省份简称) + 1个英文字母(发牌机关代号) + 5位数字或字母 = 共7位
-# - 新能源车牌（绿牌）：1个汉字(省份简称) + 1个英文字母(发牌机关代号) + 6位数字或字母 = 共8位
-# - 省份简称范围：京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新
-# - 发牌机关代号和序号中不会出现字母 I 和 O
+# Plate format rules:
+# - Standard plates (blue/yellow): 1 Chinese character (province abbreviation) + 1 English letter
+#   (issuing authority code) + 5 digits/letters = 7 characters total
+# - New energy plates (green): 1 Chinese character (province abbreviation) + 1 English letter
+#   (issuing authority code) + 6 digits/letters = 8 characters total
+# - Province abbreviations: 京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新
+# - Letters I and O never appear in issuing authority codes or serial numbers
 #
-# 输出要求：
-# 1. 如果图像中存在清晰可辨的车牌，返回：{"plate": "完整的车牌号码"}
-#   - 车牌号码必须连续书写，禁止在中间插入任何分隔符（如 ·、-、空格、/ 等）
-#   - 示例正确输出：{"plate": "沪ADH3906"}，错误输出：{"plate": "沪A·DH3906"}
-# 2. 如果图像中没有车牌、车牌模糊不清、或被遮挡无法完整识别，返回：{"plate": null}
-# 3. 只返回 JSON，不要包含任何其他文字、解释或标记"""
+# Output requirements:
+# 1. If a clearly legible plate exists in the image, return: {"plate": "full plate number"}
+#   - The plate number must be written consecutively; do NOT insert separators
+#     (such as ·, -, space, /, etc.)
+#   - Correct: {"plate": "沪ADH3906"}, incorrect: {"plate": "沪A·DH3906"}
+# 2. If there is no plate, the plate is blurry, or it is occluded beyond full
+#    recognition, return: {"plate": null}
+# 3. Return only JSON; do NOT include any other text, explanations, or markup"""
 
-SYSTEM_PROMPT = """你是一个精确的车牌识别系统。你的任务是识别图像中的中国机动车号牌，并严格返回 JSON 格式的结果。
+SYSTEM_PROMPT = """You are an accurate license plate recognition system. Your task is to recognize Chinese motor vehicle plates in images and return results strictly in JSON format.
 
-车牌格式规则：
-- 标准车牌（蓝牌/黄牌）：1个汉字(省份简称) + 1个英文字母(发牌机关代号) + 5位数字或字母 = 共7位
-- 新能源车牌（绿牌）：1个汉字(省份简称) + 1个英文字母(发牌机关代号) + 6位数字或字母 = 共8位
-- 省份简称范围：京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新
-- 发牌机关代号和序号中不会出现字母 I 和 O
+Plate format rules:
+- Standard plates (blue/yellow): 1 Chinese character (province abbreviation) + 1 English letter (issuing authority code) + 5 digits/letters = 7 characters total
+- New energy plates (green): 1 Chinese character (province abbreviation) + 1 English letter (issuing authority code) + 6 digits/letters = 8 characters total
+- Province abbreviations: 京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新
+- Letters I and O never appear in issuing authority codes or serial numbers
 
-⚠️ 关键识别提醒：
-- 省份汉字是车牌的【第一个字符】，请仔细观察汉字的笔画和结构，不要凭直觉猜测
-- 以下省份字形相似，极易混淆：皖 vs 沪 vs 苏 vs 浙 vs 赣 | 京 vs 琼 | 粤 vs 鄂 | 豫 vs 晋
-- 数字和字母易混淆对：0 ↔ O ↔ D ↔ Q | 8 ↔ B | 2 ↔ Z | 5 ↔ S | 1 ↔ I | 7 ↔ T
-- 车牌图像可能有倾斜、光照不均或部分遮挡，请以实际看到的为准
+⚠️ Critical recognition tips:
+- The province character is the **first character** of the plate; carefully observe stroke structure, do not guess by intuition
+- These province pairs are visually similar and easily confused: 皖 vs 沪 vs 苏 vs 浙 vs 赣 | 京 vs 琼 | 粤 vs 鄂 | 豫 vs 晋
+- Digit/letter confusion pairs: 0 ↔ O ↔ D ↔ Q | 8 ↔ B | 2 ↔ Z | 5 ↔ S | 1 ↔ I | 7 ↔ T
+- Plate images may be tilted, unevenly lit, or partially occluded; rely on what you actually see
 
-输出要求：
-1. 如果图像中存在清晰可辨的车牌，返回：{"plate": "完整的车牌号码"}
-   - 车牌号码必须连续书写，禁止在中间插入任何分隔符（如 ·、-、空格、/ 等）
-   - 示例正确输出：{"plate": "沪ADH3906"}，错误输出：{"plate": "沪A·DH3906"}
-2. 如果图像中没有车牌、车牌模糊不清、或被遮挡无法完整识别，返回：{"plate": null}
-3. 只返回 JSON，不要包含任何其他文字、解释或标记"""
+Output requirements:
+1. If a clearly legible plate exists in the image, return: {"plate": "full plate number"}
+   - The plate number must be written consecutively; do NOT insert separators (such as ·, -, space, /, etc.)
+   - Correct: {"plate": "沪ADH3906"}, incorrect: {"plate": "沪A·DH3906"}
+2. If there is no plate, the plate is blurry, or it is occluded beyond full recognition, return: {"plate": null}
+3. Return only JSON; do NOT include any other text, explanations, or markup"""
 
 def build_user_prompt() -> str:
-    """构建用户消息中的识别指令。"""
+    """Build the recognition instruction in the user message."""
     return "请识别这张图像中的车牌号码。"
 
 
@@ -183,14 +189,14 @@ def build_user_prompt() -> str:
 
 def clean_plate(plate: Optional[str]) -> Optional[str]:
     """
-    清洗车牌号：去除分隔符（·、-、空格、/、.、, 等）。
-    模型有时会在省份字母和数字之间插入 · 或空格，需要后处理清理。
-    返回清洗后的字符串，或 None。
+    Sanitize a plate string: remove separators (·, -, space, /, ., ,, etc.).
+    Post-processing cleanup — models sometimes insert · or spaces between the
+    province letter and digits. Returns the cleaned string, or None.
     """
     if plate is None:
         return None
     import re
-    # 去掉所有非汉字、非字母、非数字的字符
+    # Remove all non-Chinese, non-letter, non-digit characters
     cleaned = re.sub(r'[^京津沪渝冀晋蒙辽吉黑苏浙皖闽赣鲁豫鄂湘粤桂琼川贵云藏陕甘青宁新'
                      r'A-Za-z0-9]', '', plate)
     return cleaned if cleaned else None
@@ -198,8 +204,8 @@ def clean_plate(plate: Optional[str]) -> Optional[str]:
 
 def preprocess_image(image: Image.Image, max_size: int = MAX_IMAGE_SIZE) -> Image.Image:
     """
-    将图像长边缩放到 max_size 以内，保持宽高比。
-    减小传输体积，加快推理速度。
+    Resize image so the longer side is within max_size, preserving aspect ratio.
+    Reduces transfer size and speeds up inference.
     """
     w, h = image.size
     longest = max(w, h)
@@ -211,7 +217,7 @@ def preprocess_image(image: Image.Image, max_size: int = MAX_IMAGE_SIZE) -> Imag
 
 
 def encode_image(image: Image.Image) -> str:
-    """将 PIL Image 编码为 Base64 字符串（JPEG 格式，质量 85）。"""
+    """Encode a PIL Image to a Base64 string (JPEG, quality 85)."""
     buffered = BytesIO()
     image.save(buffered, format="JPEG", quality=85)
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
@@ -222,15 +228,15 @@ def encode_image(image: Image.Image) -> str:
 # ---------------------------------------------------------------------------
 
 def _get_model_think_config(model: str) -> bool:
-    """根据模型名前缀判断是否传 think: false。"""
+    """Determine whether to pass `think: false` based on model name prefix."""
     for prefix, enabled in _MODEL_THINK_CONFIG.items():
         if model.startswith(prefix):
             return enabled
-    return False  # 默认不传，安全第一
+    return False  # default: don't pass; safety first
 
 
 def _need_fallback_thinking(model: str) -> bool:
-    """判断该模型是否需要从 thinking 字段 fallback 解析。"""
+    """Determine whether this model needs fallback parsing from the thinking field."""
     for prefix, needed in _MODEL_FALLBACK_THINKING.items():
         if model.startswith(prefix):
             return needed
@@ -244,18 +250,18 @@ def query_ollama_chat(
     max_tokens: int = 100,
 ) -> PlatePrediction:
     """
-    使用 Ollama Chat API（/api/chat）进行车牌识别。
+    Recognize a license plate using the Ollama Chat API (/api/chat).
 
-    - 自动对图像做 resize 预处理
-    - 使用 system prompt + user prompt 的 chat 格式
-    - 强制 JSON 输出模式（format: "json"）
-    - 根据模型名自动决定是否传 think: false
-    - 对于 qwen3-vl 等 bug 模型，自动从 thinking 字段 fallback 解析
-    - 失败自动重试（指数退避）
+    - Auto-resizes image as preprocessing
+    - Uses system prompt + user prompt chat format
+    - Forces JSON output mode (format: "json")
+    - Automatically decides whether to pass `think: false` based on model name
+    - For buggy models like qwen3-vl, auto-fallbacks to the thinking field
+    - Auto-retries on failure (exponential backoff)
 
-    返回 PlatePrediction 结构化结果。
+    Returns a PlatePrediction structured result.
     """
-    # 预处理 & 编码
+    # Preprocess & encode
     image = preprocess_image(image)
     image_base64 = encode_image(image)
 
@@ -305,18 +311,18 @@ def query_ollama_chat(
             msg = response.json().get("message", {})
             raw_response = msg.get("content", "").strip()
 
-            # fallback: 部分模型（qwen3-vl）think:false 时 content 为空，
-            # 但实际输出在 thinking 字段里
+            # fallback: some models (qwen3-vl) return empty content
+            # when think:false; the actual output is in the thinking field
             if not raw_response and need_fallback:
                 thinking_text = msg.get("thinking", "").strip()
                 if thinking_text:
                     raw_response = thinking_text
 
-            # 尝试解析 JSON
+            # Attempt to parse JSON
             try:
                 data = json.loads(raw_response)
                 plate = data.get("plate")
-                # plate 必须是 str 或 None
+                # plate must be str or None
                 if plate is not None and not isinstance(plate, str):
                     plate = str(plate)
                 return PlatePrediction(
@@ -342,11 +348,11 @@ def query_ollama_chat(
             last_error = f"Unexpected error: {traceback.format_exc()[:300]}"
 
         if attempt < MAX_RETRIES:
-            wait = 2 ** attempt  # 指数退避: 2s → 4s → 8s
+            wait = 2 ** attempt  # exponential backoff: 2s → 4s → 8s
             tqdm.write(f"  [Retry {attempt}/{MAX_RETRIES}] {last_error}, waiting {wait}s...")
             time.sleep(wait)
 
-    # 所有重试均失败
+    # All retries exhausted
     return PlatePrediction(
         plate=None,
         raw_response="",
@@ -363,16 +369,17 @@ def query_vllm_chat(
     base_url: str = VLLM_DEFAULT_BASE_URL,
 ) -> PlatePrediction:
     """
-    使用 vLLM / OpenAI-compatible Chat API（/v1/chat/completions）进行车牌识别。
+    Recognize a license plate using vLLM / OpenAI-compatible Chat API
+    (/v1/chat/completions).
 
-    - 自动对图像做 resize 预处理
-    - 使用 system prompt + user prompt 的 chat 格式
-    - 强制 JSON 输出模式（response_format: json_object）
-    - 失败自动重试（指数退避）
+    - Auto-resizes image as preprocessing
+    - Uses system prompt + user prompt chat format
+    - Forces JSON output mode (response_format: json_object)
+    - Auto-retries on failure (exponential backoff)
 
-    返回 PlatePrediction 结构化结果。
+    Returns a PlatePrediction structured result.
     """
-    # 预处理 & 编码
+    # Preprocess & encode
     image = preprocess_image(image)
     image_base64 = encode_image(image)
 
@@ -432,11 +439,11 @@ def query_vllm_chat(
 
             raw_response = choices[0].get("message", {}).get("content", "").strip()
 
-            # 尝试解析 JSON
+            # Attempt to parse JSON
             try:
                 data = json.loads(raw_response)
                 plate = data.get("plate")
-                # plate 必须是 str 或 None
+                # plate must be str or None
                 if plate is not None and not isinstance(plate, str):
                     plate = str(plate)
                 return PlatePrediction(
@@ -462,11 +469,11 @@ def query_vllm_chat(
             last_error = f"Unexpected error: {traceback.format_exc()[:300]}"
 
         if attempt < MAX_RETRIES:
-            wait = 2 ** attempt  # 指数退避: 2s → 4s → 8s
+            wait = 2 ** attempt  # exponential backoff: 2s → 4s → 8s
             tqdm.write(f"  [Retry {attempt}/{MAX_RETRIES}] {last_error}, waiting {wait}s...")
             time.sleep(wait)
 
-    # 所有重试均失败
+    # All retries exhausted
     return PlatePrediction(
         plate=None,
         raw_response="",
@@ -476,24 +483,25 @@ def query_vllm_chat(
 
 
 # ---------------------------------------------------------------------------
-# 单样本评估（供并发调用）
+# Single-sample evaluation (for concurrent execution)
 # ---------------------------------------------------------------------------
 
 def evaluate_single(task: Tuple[str, str, str, float, str, str]) -> dict:
     """
-    评估单张图像。接收一个 tuple 参数以兼容 ThreadPoolExecutor。
+    Evaluate a single image. Accepts a tuple argument for compatibility with
+    ThreadPoolExecutor.
 
     Args:
         task: (img_path, label_name, model, temperature, backend, base_url)
 
     Returns:
-        单条结果 dict，keys: img_path, label, pred, correct, latency_ms
+        Single result dict with keys: img_path, label, pred, correct, latency_ms
     """
     img_path, label_name, model, temperature, backend, base_url = task
 
     start = time.time()
 
-    # 加载图像
+    # Load image
     try:
         image = Image.open(img_path).convert("RGB")
     except Exception as e:
@@ -510,14 +518,14 @@ def evaluate_single(task: Tuple[str, str, str, float, str, str]) -> dict:
             "latency_ms": round(latency_ms, 1),
         }
 
-    # 调用模型识别
+    # Call model for recognition
     if backend == "vllm":
         pred = query_vllm_chat(image, model=model, temperature=temperature, base_url=base_url)
     else:
         pred = query_ollama_chat(image, model=model, temperature=temperature)
     latency_ms = (time.time() - start) * 1000
 
-    # 后处理清洗：去除模型可能插入的分隔符（·、空格、- 等）
+    # Post-process: remove separators model may have inserted (·, space, -, etc.)
     pred.plate = clean_plate(pred.plate)
 
     is_correct = (pred.plate == label_name)
@@ -532,11 +540,11 @@ def evaluate_single(task: Tuple[str, str, str, float, str, str]) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# 主评估流程
+# Main evaluation flow
 # ---------------------------------------------------------------------------
 
 def _ensure_dataset_import():
-    """延迟导入 PlateDataset，避免 --help 时依赖 torch。"""
+    """Deferred import of PlateDataset to avoid requiring torch for --help."""
     global PlateDataset
     if PlateDataset is None:
         from plate_dataset import PlateDataset as _PlateDataset
@@ -544,11 +552,11 @@ def _ensure_dataset_import():
 
 
 def val(args):
-    """主评估流程：加载数据 → 逐张/并发推理 → 汇总 → 保存结果。"""
+    """Main evaluation flow: load data → sequential/concurrent inference → summarize → save."""
     _ensure_dataset_import()
     val_root = args.val_root
 
-    # ---- 加载数据集 ----
+    # ---- Load dataset ----
     val_dataset = PlateDataset(
         val_root, is_train=False,
         only_ccpd2019=args.only_ccpd2019,
@@ -557,20 +565,20 @@ def val(args):
     )
     total_num = len(val_dataset)
 
-    # ---- 确定 base_url ----
+    # ---- Determine base_url ----
     base_url = args.base_url
     if args.backend == "vllm" and base_url is None:
         base_url = VLLM_DEFAULT_BASE_URL
     elif base_url is None:
-        base_url = ""  # Ollama 不需要 base_url
+        base_url = ""  # Ollama does not need base_url
 
-    # ---- 构建任务列表 ----
+    # ---- Build task list ----
     tasks: List[Tuple[str, str, str, float, str, str]] = []
     for idx in range(total_num):
         _, label_name, img_path = val_dataset[idx]
         tasks.append((img_path, label_name, args.model, args.temperature, args.backend, base_url))
 
-    # ---- 确定输出路径 ----
+    # ---- Determine output path ----
     if args.output:
         output_path = args.output
     else:
@@ -579,7 +587,7 @@ def val(args):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_path = f"llm/results/{model_slug}_{timestamp}.json"
 
-    # ---- 评估配置 ----
+    # ---- Evaluation config ----
     dataset_filter = "all"
     if args.only_ccpd2019:
         dataset_filter = "ccpd2019"
@@ -599,21 +607,21 @@ def val(args):
         dataset_filter=dataset_filter,
     )
 
-    # ---- 打印配置 ----
+    # ---- Print config ----
     print(f"\n{'=' * 60}")
-    print(f"后端:       {config.backend}")
+    print(f"Backend:         {config.backend}")
     if config.backend == "vllm":
-        print(f"API 地址:   {base_url}")
-    print(f"模型:       {config.model}")
-    print(f"温度:       {config.temperature}")
-    print(f"Prompt 版本: {config.prompt_version}")
-    print(f"数据集:     {val_root}  ({dataset_filter})")
-    print(f"样本数:     {total_num}")
-    print(f"并发数:     {args.workers}  {'(sequential)' if args.workers <= 1 else ''}")
-    print(f"结果输出:   {output_path}")
+        print(f"API URL:         {base_url}")
+    print(f"Model:           {config.model}")
+    print(f"Temperature:     {config.temperature}")
+    print(f"Prompt version:  {config.prompt_version}")
+    print(f"Dataset:         {val_root}  ({dataset_filter})")
+    print(f"Samples:         {total_num}")
+    print(f"Workers:         {args.workers}  {'(sequential)' if args.workers <= 1 else ''}")
+    print(f"Output:          {output_path}")
     print(f"{'=' * 60}\n")
 
-    # ---- 推理 ----
+    # ---- Inference ----
     results: List[dict] = []
     correct_num = 0
     json_failures = 0
@@ -623,7 +631,7 @@ def val(args):
     start_time = time.time()
 
     if args.workers <= 1:
-        # 顺序执行
+        # Sequential execution
         for task in tqdm(tasks, desc="Evaluating", unit="img"):
             result = evaluate_single(task)
             results.append(result)
@@ -638,7 +646,7 @@ def val(args):
             if pred.get("plate") is None and not pred.get("error"):
                 null_predictions += 1
     else:
-        # 多线程并发执行
+        # Multi-threaded concurrent execution
         with ThreadPoolExecutor(max_workers=args.workers) as executor:
             futures = {executor.submit(evaluate_single, task): task for task in tasks}
             with tqdm(total=len(tasks), desc="Evaluating", unit="img") as pbar:
@@ -658,12 +666,12 @@ def val(args):
 
                     pbar.update(1)
 
-        # 按 img_path 排序恢复原始顺序
+        # Sort by img_path to restore original order
         results.sort(key=lambda r: r["img_path"])
 
     total_duration = time.time() - start_time
 
-    # ---- 汇总统计 ----
+    # ---- Summary statistics ----
     accuracy = correct_num / total_num if total_num > 0 else 0.0
     latencies = [r["latency_ms"] for r in results if r["latency_ms"] > 0]
     avg_latency_ms = sum(latencies) / len(latencies) if latencies else 0.0
@@ -679,7 +687,7 @@ def val(args):
         "avg_latency_ms": round(avg_latency_ms, 1),
     }
 
-    # ---- 保存结果 ----
+    # ---- Save results ----
     output_data = {
         "config": asdict(config),
         "summary": summary,
@@ -689,19 +697,19 @@ def val(args):
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output_data, f, ensure_ascii=False, indent=2)
-    print(f"\n✅ 结果已保存到: {output_path}")
+    print(f"\n✅ Results saved to: {output_path}")
 
-    # ---- 打印最终统计 ----
+    # ---- Print final statistics ----
     print("\n" + "=" * 60)
-    print("=== 验证结果 ===")
-    print(f"总样本数:          {total_num}")
-    print(f"正确样本数:        {correct_num}")
-    print(f"准确率:            {accuracy * 100:.2f}%")
-    print(f"JSON 解析失败:     {json_failures}")
-    print(f"无法识别 (null):   {null_predictions}")
-    print(f"请求异常:          {error_count}")
-    print(f"总耗时:            {total_duration:.2f} 秒")
-    print(f"平均每次耗时:      {avg_latency_ms:.1f} ms")
+    print("=== Evaluation Results ===")
+    print(f"Total samples:         {total_num}")
+    print(f"Correct:               {correct_num}")
+    print(f"Accuracy:              {accuracy * 100:.2f}%")
+    print(f"JSON parse failures:   {json_failures}")
+    print(f"Unrecognized (null):   {null_predictions}")
+    print(f"Request errors:        {error_count}")
+    print(f"Total time:            {total_duration:.2f} s")
+    print(f"Avg latency:           {avg_latency_ms:.1f} ms")
     print("=" * 60 + "\n")
 
 
